@@ -3,8 +3,10 @@ package impl
 import (
 	"KubeVulpes/api/types"
 	"KubeVulpes/pkg/db"
+	"KubeVulpes/pkg/db/model"
 	"context"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserGetter interface {
@@ -41,5 +43,20 @@ func (u *user) Create(ctx context.Context, obj *types.User) error {
 		return err
 	}
 
+	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(obj.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	if _, err = u.factory.User().Create(&model.User{
+		Name:        obj.Name,
+		Password:    string(encryptedPassword),
+		Role:        obj.Role,
+		Status:      obj.Status,
+		Email:       obj.Email,
+		Description: obj.Description,
+	}); err != nil {
+		return err
+	}
 	return nil
 }
