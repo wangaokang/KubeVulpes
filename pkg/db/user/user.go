@@ -2,13 +2,15 @@ package user
 
 import (
 	"KubeVulpes/pkg/db/model"
+	"context"
 	"gorm.io/gorm"
 	"time"
 )
 
 type UserInterface interface {
-	Create(obj *model.User) (*model.User, error)
-	Update(obj *model.User, uid int) (*model.User, error)
+	Create(ctx context.Context, obj *model.User) (*model.User, error)
+	Update(ctx context.Context, obj *model.User, uid int) (*model.User, error)
+	Delete(ctx context.Context, uid int) error
 }
 
 type user struct {
@@ -19,7 +21,7 @@ func NewUser(db *gorm.DB) UserInterface {
 	return &user{db}
 }
 
-func (u *user) Create(obj *model.User) (*model.User, error) {
+func (u *user) Create(ctx context.Context, obj *model.User) (*model.User, error) {
 	obj.CreateAt = time.Now()
 	if err := u.db.Create(obj).Error; err != nil {
 		return nil, err
@@ -28,7 +30,7 @@ func (u *user) Create(obj *model.User) (*model.User, error) {
 	return obj, nil
 }
 
-func (u *user) Update(obj *model.User, uid int) (*model.User, error) {
+func (u *user) Update(ctx context.Context, obj *model.User, uid int) (*model.User, error) {
 	obj.UpdateAt = time.Now()
 	f := u.db.Model(&model.User{}).Where("id = ?", uid).Updates(obj)
 	if f.Error != nil {
@@ -38,8 +40,11 @@ func (u *user) Update(obj *model.User, uid int) (*model.User, error) {
 	return obj, nil
 }
 
-func (u *user) Delete(uid int) error {
-	return u.db.Where("id = ?", uid).Delete(&model.User{}).Error
+func (u *user) Delete(ctx context.Context, uid int) error {
+	return u.db.
+		Where("id = ?", uid).
+		Delete(&model.User{}).
+		Error
 }
 
 func (u *user) Get(uid int) (*model.User, error) {

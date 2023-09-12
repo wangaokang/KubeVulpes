@@ -16,6 +16,7 @@ type UserGetter interface {
 type UserInterface interface {
 	Create(ctx context.Context, obj *types.User) error
 	preCreate(ctx context.Context, obj *types.User) error
+	Delete(ctx context.Context, id string) error
 }
 
 type user struct {
@@ -48,7 +49,7 @@ func (u *user) Create(ctx context.Context, obj *types.User) error {
 		return err
 	}
 
-	if _, err = u.factory.User().Create(&model.User{
+	if _, err = u.factory.User().Create(ctx, &model.User{
 		Name:        obj.Name,
 		Password:    string(encryptedPassword),
 		Role:        obj.Role,
@@ -58,5 +59,13 @@ func (u *user) Create(ctx context.Context, obj *types.User) error {
 	}); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (u *user) Delete(ctx context.Context, uid int) error {
+	if err := u.factory.User().Delete(ctx, uid); err != nil {
+		return err
+	}
+
 	return nil
 }

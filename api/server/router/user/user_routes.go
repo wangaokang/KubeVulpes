@@ -21,7 +21,12 @@ func (u *userRouter) createUser(c *gin.Context) {
 }
 
 func (u *userRouter) deleteUser(c *gin.Context) {
-
+	r := httputils.NewResponse()
+	id := c.Param("id")
+	if err := kubeVulpes.CoreV1.User().Delete(c, id); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
 }
 
 func (u *userRouter) updateUser(c *gin.Context) {
