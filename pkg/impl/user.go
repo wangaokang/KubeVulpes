@@ -14,10 +14,11 @@ type UserGetter interface {
 }
 
 type UserInterface interface {
-	Create(ctx context.Context, obj *types.User) error
 	preCreate(ctx context.Context, obj *types.User) error
+	Create(ctx context.Context, obj *types.User) error
 	Delete(ctx context.Context, uid int) error
 	Get(ctx context.Context, uid int) (*types.User, error)
+	List(ctx context.Context, page, pageSize int) ([]*types.User, int, error)
 }
 
 type user struct {
@@ -78,6 +79,20 @@ func (u *user) Get(ctx context.Context, uid int) (*types.User, error) {
 	}
 
 	return model2Type(user), nil
+}
+
+func (u *user) List(ctx context.Context, page, pageSize int) ([]*types.User, int, error) {
+	users, total, err := u.factory.User().List(ctx, page, pageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var ret []*types.User
+	for _, user := range users {
+		ret = append(ret, model2Type(user))
+	}
+
+	return ret, total, nil
 }
 
 func model2Type(u *model.User) *types.User {
