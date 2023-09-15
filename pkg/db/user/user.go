@@ -11,6 +11,9 @@ type UserInterface interface {
 	Create(ctx context.Context, obj *model.User) (*model.User, error)
 	Update(ctx context.Context, obj *model.User, uid int) (*model.User, error)
 	Delete(ctx context.Context, uid int) error
+	Get(ctx context.Context, uid int) (*model.User, error)
+	List(ctx context.Context, page int, pageSize int) ([]*model.User, int, error)
+	// TODO: Add more methods
 }
 
 type user struct {
@@ -47,7 +50,7 @@ func (u *user) Delete(ctx context.Context, uid int) error {
 		Error
 }
 
-func (u *user) Get(uid int) (*model.User, error) {
+func (u *user) Get(ctx context.Context, uid int) (*model.User, error) {
 	var obj model.User
 	if err := u.db.Where("id = ?", uid).First(&obj).Error; err != nil {
 		return nil, err
@@ -57,9 +60,9 @@ func (u *user) Get(uid int) (*model.User, error) {
 }
 
 // List 分页查询
-func (u *user) List(page, pageSize int) ([]model.User, int64, error) {
+func (u *user) List(ctx context.Context, page int, pageSize int) ([]*model.User, int, error) {
 	var (
-		users []model.User
+		users []*model.User
 		total int64
 	)
 	if err := u.db.Model(&model.User{}).Count(&total).Error; err != nil {
@@ -69,5 +72,5 @@ func (u *user) List(page, pageSize int) ([]model.User, int64, error) {
 		return nil, 0, err
 	}
 
-	return users, total, nil
+	return users, 0, nil
 }

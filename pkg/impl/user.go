@@ -16,14 +16,15 @@ type UserGetter interface {
 type UserInterface interface {
 	Create(ctx context.Context, obj *types.User) error
 	preCreate(ctx context.Context, obj *types.User) error
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, uid int) error
+	Get(ctx context.Context, uid int) (*types.User, error)
 }
 
 type user struct {
 	factory db.ShareDaoFactory
 }
 
-func newUser(c *KubeVulpes) *user {
+func newUser(c *KubeVulpes) UserInterface {
 	return &user{c.factory}
 }
 
@@ -68,4 +69,25 @@ func (u *user) Delete(ctx context.Context, uid int) error {
 	}
 
 	return nil
+}
+
+func (u *user) Get(ctx context.Context, uid int) (*types.User, error) {
+	user, err := u.factory.User().Get(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	return model2Type(user), nil
+}
+
+func model2Type(u *model.User) *types.User {
+	return &types.User{
+		Id:          u.Id,
+		Name:        u.Name,
+		Status:      u.Status,
+		Role:        u.Role,
+		Email:       u.Email,
+		Description: u.Description,
+		TimeOption:  types.FormatTime(u.CreateAt, u.UpdateAt),
+	}
 }
