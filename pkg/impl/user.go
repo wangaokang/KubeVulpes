@@ -16,6 +16,7 @@ type UserGetter interface {
 type UserInterface interface {
 	preCreate(ctx context.Context, obj *types.User) error
 	Create(ctx context.Context, obj *types.User) error
+	Update(ctx context.Context, obj *types.User) error
 	Delete(ctx context.Context, uid int) error
 	Get(ctx context.Context, uid int) (*types.User, error)
 	List(ctx context.Context, page, pageSize int) ([]*types.User, int, error)
@@ -64,6 +65,19 @@ func (u *user) Create(ctx context.Context, obj *types.User) error {
 	return nil
 }
 
+func (u *user) Update(ctx context.Context, obj *types.User) error {
+	oldUser, err := u.factory.User().Get(ctx, obj.Id)
+	if err != nil {
+		return err
+	}
+	updates := u.parseUserUpdates(oldUser, obj)
+	if err := u.factory.User().Update(ctx, oldUser.Id, updates); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *user) Delete(ctx context.Context, uid int) error {
 	if err := u.factory.User().Delete(ctx, uid); err != nil {
 		return err
@@ -93,6 +107,31 @@ func (u *user) List(ctx context.Context, page, pageSize int) ([]*types.User, int
 	}
 
 	return ret, total, nil
+}
+
+func (u *user) parseUserUpdates(oldObj *model.User, newObj *types.User) map[string]interface{} {
+	updates := make(map[string]interface{})
+
+	if oldObj.Status != newObj.Status { // 更新状态
+		updates["status"] = newObj.Status
+	}
+	if oldObj.Role != newObj.Role { // 更新用户角色
+		updates["role"] = newObj.Role
+	}
+	if oldObj.Email != newObj.Email { // 更新邮件
+		updates["email"] = newObj.Email
+	}
+	if oldObj.Description != newObj.Description { // 更新描述
+		updates["description"] = newObj.Description
+	}
+	if oldObj.Password != newObj.Password { // 更新密码
+		updates["password"] = newObj.Password
+	}
+	if oldObj.Name != newObj.Name { // 更新用户名
+		updates["name"] = newObj.Name
+	}
+
+	return updates
 }
 
 func model2Type(u *model.User) *types.User {

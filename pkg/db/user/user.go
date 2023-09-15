@@ -2,6 +2,7 @@ package user
 
 import (
 	"KubeVulpes/pkg/db/model"
+	dberrors "KubeVulpes/pkg/errors"
 	"context"
 	"gorm.io/gorm"
 	"time"
@@ -9,7 +10,7 @@ import (
 
 type UserInterface interface {
 	Create(ctx context.Context, obj *model.User) (*model.User, error)
-	Update(ctx context.Context, obj *model.User, uid int) (*model.User, error)
+	Update(ctx context.Context, uid int, updates map[string]interface{}) error
 	Delete(ctx context.Context, uid int) error
 	Get(ctx context.Context, uid int) (*model.User, error)
 	List(ctx context.Context, page int, pageSize int) ([]*model.User, int, error)
@@ -33,14 +34,22 @@ func (u *user) Create(ctx context.Context, obj *model.User) (*model.User, error)
 	return obj, nil
 }
 
-func (u *user) Update(ctx context.Context, obj *model.User, uid int) (*model.User, error) {
-	obj.UpdateAt = time.Now()
-	f := u.db.Model(&model.User{}).Where("id = ?", uid).Updates(obj)
+func (u *user) Update(ctx context.Context, uid int, updates map[string]interface{}) error {
+	// 系统维护字段
+	updates["updateAt"] = time.Now()
+
+	f := u.db.Model(&model.User{}).
+		Where("id = ? and resource_version = ?", uid).
+		Updates(updates)
 	if f.Error != nil {
-		return nil, f.Error
+		return f.Error
 	}
 
-	return obj, nil
+	if f.RowsAffected == 0 {
+		return dberrors.ErrRecordNotUpdate
+	}
+
+	return nil
 }
 
 func (u *user) Delete(ctx context.Context, uid int) error {
