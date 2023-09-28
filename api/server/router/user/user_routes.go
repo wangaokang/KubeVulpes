@@ -4,6 +4,7 @@ import (
 	"KubeVulpes/api/server/httputils"
 	"KubeVulpes/api/types"
 	"KubeVulpes/pkg/kubeVulpes"
+	"KubeVulpes/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,8 +23,12 @@ func (u *userRouter) createUser(c *gin.Context) {
 
 func (u *userRouter) deleteUser(c *gin.Context) {
 	r := httputils.NewResponse()
-	id := c.Param("id")
-	if err := kubeVulpes.CoreV1.User().Delete(c, id); err != nil {
+	uid, err := utils.ParseInt64(c.Param("id"))
+	if err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+	if err := kubeVulpes.CoreV1.User().Delete(c, uid); err != nil {
 		httputils.SetFailed(c, r, err)
 		return
 	}

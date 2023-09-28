@@ -17,8 +17,8 @@ type UserInterface interface {
 	preCreate(ctx context.Context, obj *types.User) error
 	Create(ctx context.Context, obj *types.User) error
 	Update(ctx context.Context, obj *types.User) error
-	Delete(ctx context.Context, uid int) error
-	Get(ctx context.Context, uid int) (*types.User, error)
+	Delete(ctx context.Context, uid int64) error
+	Get(ctx context.Context, uid int64) (*types.User, error)
 	List(ctx context.Context, page, pageSize int) ([]*types.User, int, error)
 }
 
@@ -78,7 +78,7 @@ func (u *user) Update(ctx context.Context, obj *types.User) error {
 	return nil
 }
 
-func (u *user) Delete(ctx context.Context, uid int) error {
+func (u *user) Delete(ctx context.Context, uid int64) error {
 	if err := u.factory.User().Delete(ctx, uid); err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (u *user) Delete(ctx context.Context, uid int) error {
 	return nil
 }
 
-func (u *user) Get(ctx context.Context, uid int) (*types.User, error) {
+func (u *user) Get(ctx context.Context, uid int64) (*types.User, error) {
 	user, err := u.factory.User().Get(ctx, uid)
 	if err != nil {
 		return nil, err

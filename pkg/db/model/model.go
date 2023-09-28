@@ -10,7 +10,7 @@ type KubeVulpes struct {
 
 type User struct {
 	KubeVulpes
-	Id          int    `gorm:"column:id;primary_key;AUTO_INCREMENT;not null" json:"id"`
+	Id          int64  `gorm:"column:id;primary_key;AUTO_INCREMENT;not null" json:"id"`
 	Name        string `gorm:"index:idx_name,unique" json:"name"`
 	Password    string `gorm:"type:varchar(256)" json:"password"`
 	Role        string `gorm:"column:role;not null" json:"role"`

@@ -10,9 +10,9 @@ import (
 
 type UserInterface interface {
 	Create(ctx context.Context, obj *model.User) (*model.User, error)
-	Update(ctx context.Context, uid int, updates map[string]interface{}) error
-	Delete(ctx context.Context, uid int) error
-	Get(ctx context.Context, uid int) (*model.User, error)
+	Update(ctx context.Context, uid int64, updates map[string]interface{}) error
+	Delete(ctx context.Context, uid int64) error
+	Get(ctx context.Context, uid int64) (*model.User, error)
 	List(ctx context.Context, page int, pageSize int) ([]*model.User, int, error)
 	// TODO: Add more methods
 }
@@ -34,7 +34,7 @@ func (u *user) Create(ctx context.Context, obj *model.User) (*model.User, error)
 	return obj, nil
 }
 
-func (u *user) Update(ctx context.Context, uid int, updates map[string]interface{}) error {
+func (u *user) Update(ctx context.Context, uid int64, updates map[string]interface{}) error {
 	// 系统维护字段
 	updates["updateAt"] = time.Now()
 
@@ -52,14 +52,14 @@ func (u *user) Update(ctx context.Context, uid int, updates map[string]interface
 	return nil
 }
 
-func (u *user) Delete(ctx context.Context, uid int) error {
+func (u *user) Delete(ctx context.Context, uid int64) error {
 	return u.db.
 		Where("id = ?", uid).
 		Delete(&model.User{}).
 		Error
 }
 
-func (u *user) Get(ctx context.Context, uid int) (*model.User, error) {
+func (u *user) Get(ctx context.Context, uid int64) (*model.User, error) {
 	var obj model.User
 	if err := u.db.Where("id = ?", uid).First(&obj).Error; err != nil {
 		return nil, err
