@@ -1,6 +1,7 @@
 package user
 
 import (
+	KubeVulpesmeta "KubeVulpes/api/meta"
 	"KubeVulpes/pkg/db/model"
 	dberrors "KubeVulpes/pkg/errors"
 	"context"
@@ -13,7 +14,7 @@ type UserInterface interface {
 	Update(ctx context.Context, uid int64, updates map[string]interface{}) error
 	Delete(ctx context.Context, uid int64) error
 	Get(ctx context.Context, uid int64) (*model.User, error)
-	List(ctx context.Context, page int, pageSize int) ([]*model.User, int, error)
+	List(ctx context.Context, selector *KubeVulpesmeta.ListSelector) ([]*model.User, error)
 	// TODO: Add more methods
 }
 
@@ -26,7 +27,9 @@ func NewUser(db *gorm.DB) UserInterface {
 }
 
 func (u *user) Create(ctx context.Context, obj *model.User) (*model.User, error) {
-	obj.CreateAt = time.Now()
+	now := time.Now()
+	obj.CreateAt = now
+	obj.UpdateAt = now
 	if err := u.db.Create(obj).Error; err != nil {
 		return nil, err
 	}
@@ -39,7 +42,7 @@ func (u *user) Update(ctx context.Context, uid int64, updates map[string]interfa
 	updates["updateAt"] = time.Now()
 
 	f := u.db.Model(&model.User{}).
-		Where("id = ? and resource_version = ?", uid).
+		Where("id = ? ", uid).
 		Updates(updates)
 	if f.Error != nil {
 		return f.Error
@@ -69,17 +72,13 @@ func (u *user) Get(ctx context.Context, uid int64) (*model.User, error) {
 }
 
 // List 分页查询
-func (u *user) List(ctx context.Context, page int, pageSize int) ([]*model.User, int, error) {
+func (u *user) List(ctx context.Context, selector *KubeVulpesmeta.ListSelector) ([]*model.User, error) {
 	var (
 		users []*model.User
-		total int64
 	)
-	if err := u.db.Model(&model.User{}).Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
-	if err := u.db.Limit(pageSize).Offset((page - 1) * pageSize).Find(&users).Error; err != nil {
-		return nil, 0, err
+	if err := u.db.Limit(selector.Limit).Offset((selector.Page - 1) * selector.Limit).Find(&users).Error; err != nil {
+		return nil, err
 	}
 
-	return users, 0, nil
+	return users, nil
 }

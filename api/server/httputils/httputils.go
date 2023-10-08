@@ -42,3 +42,17 @@ func SetFailedWithCode(c *gin.Context, r *Response, code int, err error) {
 	r.SetMessageWithCode(err, code)
 	c.JSON(http.StatusOK, r)
 }
+
+// SetSuccess 设置成功返回值
+func SetSuccess(c *gin.Context, r *Response) {
+	r.SetMessageWithCode("success", http.StatusOK)
+	c.JSON(http.StatusOK, r)
+}
+
+// AbortFailedWithCode 设置错误，code 返回值并终止请求
+func AbortFailedWithCode(c *gin.Context, code int, err error) {
+	r := NewResponse()
+	r.SetMessageWithCode(err, code)
+	c.JSON(http.StatusOK, r)
+	c.Abort()
+}

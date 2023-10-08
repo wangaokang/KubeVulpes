@@ -1,6 +1,7 @@
 package impl
 
 import (
+	KubeVulpesmeta "KubeVulpes/api/meta"
 	"KubeVulpes/api/types"
 	"KubeVulpes/pkg/db"
 	"KubeVulpes/pkg/db/model"
@@ -19,7 +20,7 @@ type UserInterface interface {
 	Update(ctx context.Context, obj *types.User) error
 	Delete(ctx context.Context, uid int64) error
 	Get(ctx context.Context, uid int64) (*types.User, error)
-	List(ctx context.Context, page, pageSize int) ([]*types.User, int, error)
+	List(ctx context.Context, selector *KubeVulpesmeta.ListSelector) ([]*types.User, error)
 }
 
 type user struct {
@@ -95,10 +96,10 @@ func (u *user) Get(ctx context.Context, uid int64) (*types.User, error) {
 	return model2Type(user), nil
 }
 
-func (u *user) List(ctx context.Context, page, pageSize int) ([]*types.User, int, error) {
-	users, total, err := u.factory.User().List(ctx, page, pageSize)
+func (u *user) List(ctx context.Context, selector *KubeVulpesmeta.ListSelector) ([]*types.User, error) {
+	users, err := u.factory.User().List(ctx, selector)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	var ret []*types.User
@@ -106,7 +107,7 @@ func (u *user) List(ctx context.Context, page, pageSize int) ([]*types.User, int
 		ret = append(ret, model2Type(user))
 	}
 
-	return ret, total, nil
+	return ret, nil
 }
 
 func (u *user) parseUserUpdates(oldObj *model.User, newObj *types.User) map[string]interface{} {
