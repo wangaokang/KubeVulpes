@@ -10,7 +10,9 @@ func NewServerCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "kubeV",
 		Long: "kubevupels is a ops tools for kubernetes.",
-		Run:  func(cmd *cobra.Command, args []string) {},
+		Run: func(cmd *cobra.Command, args []string) {
+
+		},
 		Args: func(cmd *cobra.Command, args []string) error {
 			for _, arg := range args {
 				if len(arg) > 0 {
