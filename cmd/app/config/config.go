@@ -1,12 +1,22 @@
 package config
 
+type Mode string
+
+const (
+	DebugMode Mode = "debug"
+)
+
+func (m Mode) InDebug() bool {
+	return m == DebugMode
+}
+
 type Config struct {
 	Default DefaultOptions `yaml:"default"`
 	DB      DBOptions      `yaml:"db"`
 }
 
 type DefaultOptions struct {
-	Mode   string `yaml:"mode"`
+	Mode   Mode   `yaml:"mode"`
 	Listen int    `yaml:"listen"`
 	JWTKey string `yaml:"jwt_key"`
 

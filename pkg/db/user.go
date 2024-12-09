@@ -1,0 +1,140 @@
+package db
+
+import (
+	"context"
+	"time"
+
+	"gorm.io/gorm"
+
+	"kubevulpes/pkg/db/model"
+	"kubevulpes/pkg/util/errors"
+)
+
+type UserInterface interface {
+	Create(ctx context.Context, object *model.User, fns ...func() error) (*model.User, error)
+	Update(ctx context.Context, uid int64, resourceVersion int64, updates map[string]interface{}) error
+	Delete(ctx context.Context, uid int64) error
+	Get(ctx context.Context, uid int64) (*model.User, error)
+	GetRoot(ctx context.Context) (*model.User, error)
+	List(ctx context.Context, opts ...Options) ([]model.User, int64, error)
+
+	Count(ctx context.Context) (int64, error)
+
+	GetUserByName(ctx context.Context, userName string) (*model.User, error)
+}
+
+type user struct {
+	db *gorm.DB
+}
+
+func (u *user) Create(ctx context.Context, object *model.User, fns ...func() error) (*model.User, error) {
+	now := time.Now()
+	object.GmtCreate = now
+	object.GmtModified = now
+
+	if err := u.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(object).Error; err != nil {
+			return err
+		}
+
+		for _, fn := range fns {
+			if err := fn(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return object, nil
+}
+
+func (u *user) Update(ctx context.Context, uid int64, resourceVersion int64, updates map[string]interface{}) error {
+	// 系统维护字段
+	updates["gmt_modified"] = time.Now()
+	updates["resource_version"] = resourceVersion + 1
+
+	f := u.db.WithContext(ctx).Model(&model.User{}).Where("id = ? and resource_version = ?", uid, resourceVersion).Updates(updates)
+	if f.Error != nil {
+		return f.Error
+	}
+	if f.RowsAffected == 0 {
+		return errors.ErrRecordNotUpdate
+	}
+	return nil
+}
+
+func (u *user) Delete(ctx context.Context, uid int64) error {
+	return u.db.WithContext(ctx).Where("id = ?", uid).Delete(&model.User{}).Error
+}
+
+func (u *user) Get(ctx context.Context, uid int64) (*model.User, error) {
+	var object model.User
+	if err := u.db.WithContext(ctx).Where("id = ?", uid).First(&object).Error; err != nil {
+		if errors.IsRecordNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &object, nil
+}
+
+func (u *user) GetRoot(ctx context.Context) (*model.User, error) {
+	var object model.User
+	if err := u.db.WithContext(ctx).Where("role = ?", model.RoleRoot).First(&object).Error; err != nil {
+		if errors.IsRecordNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &object, nil
+}
+
+// List 获取用户列表
+func (u *user) List(ctx context.Context, opts ...Options) ([]model.User, int64, error) {
+	var (
+		objects []model.User
+		total   int64
+	)
+
+	tx := u.db.WithContext(ctx)
+	for _, opt := range opts {
+		tx = opt(tx)
+	}
+	if err := tx.Find(&objects).Error; err != nil {
+		return nil, 0, err
+	}
+	if err := u.db.WithContext(ctx).Model(&model.User{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return objects, total, nil
+}
+
+func (u *user) Count(ctx context.Context) (int64, error) {
+	var total int64
+	if err := u.db.WithContext(ctx).Model(&model.User{}).Count(&total).Error; err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+func (u *user) GetUserByName(ctx context.Context, userName string) (*model.User, error) {
+	var object model.User
+	if err := u.db.WithContext(ctx).Where("name = ?", userName).First(&object).Error; err != nil {
+		if errors.IsRecordNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &object, nil
+}
+
+func newUser(db *gorm.DB) *user {
+	return &user{db}
+}
