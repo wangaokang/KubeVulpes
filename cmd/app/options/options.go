@@ -1,19 +1,33 @@
-package options
+package option
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v2/model"
+	gormadapter "github.com/casbin/gorm-adapter/v3"
+	"github.com/elastic/go-ucfg"
+	"github.com/elastic/go-ucfg/yaml"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
 	"kubevulpes/cmd/app/config"
+	"kubevulpes/pkg/controller"
+	"kubevulpes/pkg/db"
+	vulpesModel "kubevulpes/pkg/db/model"
 )
 
 const (
 	maxIdleConns      = 10
 	maxOpenConns      = 100
 	defaultConfigFile = "/etc/kubevulpes/config.yaml"
+	defaultTokenKey   = "vuples"
+
+	rulesTableName = "rules"
 )
 
 type Options struct {
@@ -21,10 +35,18 @@ type Options struct {
 	ComponentConfig config.Config
 	HttpEngine      *gin.Engine
 
-	//todo 预留数据库接口
+	// 数据库接口
+	db      *gorm.DB
+	Factory db.ShareDaoFactory
+
+	// 控制器接口
+	Controller controller.VuplesInterface
 
 	//configFile 文件
 	ConfigFile string
+
+	// Authorization enforcement and policy management
+	Enforcer *casbin.SyncedEnforcer
 }
 
 func NewOptions() (*Options, error) {
@@ -35,6 +57,34 @@ func NewOptions() (*Options, error) {
 }
 
 func (o *Options) Complete() error {
+	// 配置文件优先级: 默认配置，环境变量，命令行
+	if len(o.ConfigFile) == 0 {
+		// Try to read config file path from env.
+		if cfgFile := os.Getenv("ConfigFile"); cfgFile != "" {
+			o.ConfigFile = cfgFile
+		} else {
+			o.ConfigFile = defaultConfigFile
+		}
+	}
+	// todo 读取配置文件
+
+	if len(o.ComponentConfig.Default.JWTKey) == 0 {
+		o.ComponentConfig.Default.JWTKey = defaultTokenKey
+	}
+	return nil
+}
+
+func (o *Options) parseConfig(configFile string, conf *config.Config) error {
+	configContent, err := yaml.NewConfigWithFile(configFile, ucfg.PathSep("."))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("config file not found!")
+		}
+		return err
+	}
+	if err := configContent.Unpack(&conf); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -51,6 +101,9 @@ func (o *Options) register() error {
 	}
 
 	// TODO: 注册其他依赖
+	if err := o.registerEnforcer(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -85,4 +138,27 @@ func (o *Options) registerDatabase() error {
 		return err
 	}
 	return nil
+}
+
+// This panics if o.db is nil.
+func (o *Options) registerEnforcer() error {
+	// Casbin
+	a, err := gormadapter.NewAdapterByDBUseTableName(o.db, "", rulesTableName)
+	if err != nil {
+		return err
+	}
+
+	m, err := model.NewModelFromString(vulpesModel.RBACModel)
+	if err != nil {
+		return err
+	}
+
+	if o.Enforcer, err = casbin.NewSyncedEnforcer(m, a); err != nil {
+		return err
+	}
+
+	// Add an super admin policy.
+	_, err = o.Enforcer.AddPolicy(vulpesModel.AdminPolicy.Raw())
+	o.Enforcer.AddFunction("keyMatch2", vulpesModel.CustomKeyMatch)
+	return err
 }

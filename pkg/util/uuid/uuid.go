@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	namePrefix = "vulpes-"
+	namePrefix = "vuples-"
 )
 
 func NewUUID() string {

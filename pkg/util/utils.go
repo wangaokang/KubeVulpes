@@ -1,4 +1,4 @@
-package utils
+package util
 
 import (
 	"fmt"
@@ -51,4 +51,27 @@ func formatSize(size int64, unitArray [6]string) string {
 // MultiSizeConvert 将两个字节大小的整数值转换为可读格式
 func MultiSizeConvert(size1, size2 int64) (string, string) {
 	return formatSize(size1, sizeUnitArray), formatSize(size2, sizeUnitArray)
+}
+
+// DeduplicateIntSlice returns a new slice with duplicated elements removed.
+func DeduplicateIntSlice(s []int64) (ret []int64) {
+	ret = make([]int64, 0)
+	m := make(map[int64]struct{})
+	for _, v := range s {
+		if _, ok := m[v]; ok {
+			continue
+		}
+		m[v] = struct{}{}
+		ret = append(ret, v)
+	}
+
+	return
+}
+
+// Less returns the smaller one.
+func Less(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

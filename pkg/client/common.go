@@ -1,10 +1,11 @@
 package client
 
 import (
+	"path/filepath"
+
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
-	"path/filepath"
 )
 
 //// 测试集群连通性
