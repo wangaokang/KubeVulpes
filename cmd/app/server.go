@@ -3,9 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"k8s.io/klog/v2"
-	"kubevulpes/api/router"
-
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,7 +11,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"k8s.io/klog/v2"
 
+	"kubevulpes/api/router"
 	option "kubevulpes/cmd/app/options"
 )
 
@@ -24,8 +23,8 @@ func NewServerCommand(version string) *cobra.Command {
 		log.Fatalf("unable to initialize command options: %v", err)
 	}
 	cmd := &cobra.Command{
-		Use:  "license",
-		Long: `EMR license build`,
+		Use:  "kube-vulpes",
+		Long: `kube-vulpes build`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err = opts.Complete(); err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
@@ -83,14 +82,14 @@ func Run(opt *option.Options) error {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Info("shutting license server down ...")
+	log.Info("shutting vuples server down ...")
 
 	// The context is used to inform the server it has 5 seconds to finish the request
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("license server forced to shutdown: %v", err)
+		log.Fatalf("vuples server forced to shutdown: %v", err)
 	}
 	return nil
 }
