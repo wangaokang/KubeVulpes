@@ -11,7 +11,7 @@ import (
 var alwaysAllowPath sets.String
 
 func init() {
-	alwaysAllowPath = sets.NewString("/license/users/login")
+	alwaysAllowPath = sets.NewString("/api/v1/users/login")
 }
 
 func InstallMiddlewares(o *option.Options) {

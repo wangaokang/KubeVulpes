@@ -2,12 +2,12 @@ package main
 
 import (
 	"io"
-	"k8s.io/klog/v2"
 	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"k8s.io/apimachinery/pkg/util/rand"
+	"k8s.io/klog/v2"
 
 	"kubevulpes/cmd/app"
 )
