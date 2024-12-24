@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"kubevulpes/pkg/db"
 	"net/http"
 	"sync"
 	"time"
@@ -112,7 +113,7 @@ func (t *TerminalSession) Read(p []byte) (int, error) {
 	case "ping":
 		return 0, nil
 	default:
-		return copy(p, "\u0004"), fmt.Errorf("unknown message type")
+		return copy(p, "\u0004"), fmt.Errorf("unknown message types")
 	}
 }
 
@@ -387,4 +388,23 @@ func (node *KubeNode) Unmarshal(s string) error {
 		return err
 	}
 	return nil
+}
+
+func (l *ListOptions) IsDesc() bool {
+	if l.Keyword != "asc" {
+		return true
+	}
+
+	return false
+}
+
+func (l *ListOptions) BuildPageNation() []db.Options {
+	opts := []db.Options{db.WithPagination(l.Page, l.Limit)}
+	if l.IsDesc() {
+		opts = append(opts, db.WithOrderByDesc())
+	} else {
+		opts = append(opts, db.WithOrderByASC())
+	}
+
+	return opts
 }

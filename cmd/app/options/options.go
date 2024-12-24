@@ -67,10 +67,16 @@ func (o *Options) Complete() error {
 		}
 	}
 	// todo 读取配置文件
-
 	if len(o.ComponentConfig.Default.JWTKey) == 0 {
 		o.ComponentConfig.Default.JWTKey = defaultTokenKey
 	}
+
+	// 注册依赖组件
+	if err := o.register(); err != nil {
+		return err
+	}
+
+	o.Controller = controller.New(o.ComponentConfig, o.Factory, o.Enforcer)
 	return nil
 }
 
@@ -133,7 +139,7 @@ func (o *Options) registerDatabase() error {
 	sqlDB.SetMaxIdleConns(maxIdleConns)
 	sqlDB.SetMaxOpenConns(maxOpenConns)
 
-	//o.Factory, err = db.NewDaoFactory(DB, o.ComponentConfig.Default.AutoMigrate)
+	o.Factory, err = db.NewDaoFactory(DB, o.ComponentConfig.Default.AutoMigrate)
 	if err != nil {
 		return err
 	}

@@ -22,12 +22,12 @@ type UserStatus uint8 // TODO
 
 type User struct {
 	base.Model
-	Name        string     `gorm:"type:varchar(128);column:name;not null" json:"name"`
-	Password    string     `gorm:"type:varchar(256);column:password;not null" json:"password"`
-	Role        UserRole   `gorm:"type:tinyint;column:role;not null" json:"role"` // 0
-	Email       string     `gorm:"type:varchar(256);column:email;not null" json:"email"`
-	Status      UserStatus `gorm:"type:tinyint;column:status;not null" json:"status"`
-	Description string     `gorm:"type:text;column:description;not null" json:"description"`
+	Name        string     `gorm:"types:varchar(128);column:name;not null" json:"name"`
+	Password    string     `gorm:"types:varchar(256);column:password;not null" json:"password"`
+	Role        UserRole   `gorm:"types:tinyint;column:role;not null" json:"role"` // 0
+	Email       string     `gorm:"types:varchar(256);column:email;not null" json:"email"`
+	Status      UserStatus `gorm:"types:tinyint;column:status;not null" json:"status"`
+	Description string     `gorm:"types:text;column:description;not null" json:"description"`
 }
 
 func init() {

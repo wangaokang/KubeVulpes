@@ -25,13 +25,13 @@ func (s AuditOperationStatus) String() string {
 type Audit struct {
 	base.Model
 
-	RequestId  string               `gorm:"column:request_id;type:varchar(32);index" json:"request_id"`  // 请求 ID
-	Ip         string               `gorm:"type:varchar(128)" json:"ip"`                                 // 客户端 IP
-	Action     string               `gorm:"type:varchar(255)" json:"action"`                             // HTTP 方法 [POST/DELETE/PUT/GET]
-	Operator   string               `gorm:"type:varchar(255)" json:"operator"`                           // 操作人 ID
-	Path       string               `gorm:"type:varchar(255)" json:"path"`                               // HTTP 路径
-	ObjectType ObjectType           `gorm:"column:resource_type;type:varchar(128)" json:"resource_type"` // 操作资源类型 [cluster/plan...]
-	Status     AuditOperationStatus `gorm:"type:tinyint" json:"status"`                                  // 记录操作运行结果[OperationStatus]
+	RequestId  string               `gorm:"column:request_id;types:varchar(32);index" json:"request_id"`  // 请求 ID
+	Ip         string               `gorm:"types:varchar(128)" json:"ip"`                                 // 客户端 IP
+	Action     string               `gorm:"types:varchar(255)" json:"action"`                             // HTTP 方法 [POST/DELETE/PUT/GET]
+	Operator   string               `gorm:"types:varchar(255)" json:"operator"`                           // 操作人 ID
+	Path       string               `gorm:"types:varchar(255)" json:"path"`                               // HTTP 路径
+	ObjectType ObjectType           `gorm:"column:resource_type;types:varchar(128)" json:"resource_type"` // 操作资源类型 [cluster/plan...]
+	Status     AuditOperationStatus `gorm:"types:tinyint" json:"status"`                                  // 记录操作运行结果[OperationStatus]
 }
 
 func (a *Audit) TableName() string {

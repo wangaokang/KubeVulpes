@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"kubevulpes/api/httputils"
-	types "kubevulpes/pkg/type"
+	"kubevulpes/pkg/types"
 )
 
 func (a *authRouter) listPolicy(c *gin.Context) {

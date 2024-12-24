@@ -89,7 +89,7 @@ func extractToken(c *gin.Context, ws bool) (string, error) {
 		return "", fmt.Errorf("invalid authorization header format")
 	}
 	if fields[0] != "Bearer" {
-		return "", fmt.Errorf("unsupported authorization type")
+		return "", fmt.Errorf("unsupported authorization types")
 	}
 
 	return fields[1], nil

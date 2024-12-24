@@ -98,6 +98,12 @@ type User struct {
 	TimeMeta `json:",inline"`
 }
 
+type Role struct {
+	PixiuMeta `json:",inline"`
+
+	Name string `json:"name"`
+}
+
 type Tenant struct {
 	PixiuMeta `json:",inline"`
 	TimeMeta  `json:",inline"`
