@@ -6,15 +6,15 @@ type UserRole uint8
 
 const (
 	RoleReader          UserRole = iota * 2 // 只读用户
-	RoleReadWrite                           // 读增用户
-	RoleReadWriteUpdate                     // 读增改用户
-	RoleAdmin                               // 管理员
-	RoleRoot                                // 超级管理员
+	RoleReadWrite                           // 读写用户
+	RoleReadWriteUpdate                     // 读写改用户
+	RoleAdmin                               // 管理员 只能管理自己创建的用户
+	RoleRoot                                // 超级管理员 可以管理所有用户
 )
 
 const (
-	UserStatusDisabled         UserStatus = iota // 禁用
-	UserStatusNormalUserStatus                   // 正常
+	UserStatusNormalUserStatus UserStatus = iota // 正常
+	UserStatusDisabled                           // 禁用
 	UserStatusDeleted                            // 删除
 )
 

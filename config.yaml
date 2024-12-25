@@ -1,11 +1,11 @@
 #databases
-db.host: 172.16.8.165
-db.port: 3308
+db.host: 172.16.114.4
+db.port: 3306
 db.user: root
 db.password: DT#passw0rd2019
-db.name: vulpes
-db.timeout: 30s
+db.name: kubevuples
 
-#host
-host.listen: 8099
-host.addr: 0.0.0.0
+#default
+default.mode: debug
+default.auto_migrate: true
+default.listen: 8099

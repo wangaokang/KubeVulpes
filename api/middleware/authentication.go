@@ -17,7 +17,7 @@ func Authentication(o *option.Options) gin.HandlerFunc {
 	keyBytes := []byte(o.ComponentConfig.Default.JWTKey)
 
 	return func(c *gin.Context) {
-		if o.ComponentConfig.Default.Mode.InDebug() {
+		if o.ComponentConfig.Default.Mode == "debug" {
 			// Considered all as root user when running in debug mode.
 			// todo GetRoot
 			//root, err := o.Factory.User().GetRoot(c)

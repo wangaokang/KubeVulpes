@@ -2,6 +2,8 @@ package option
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm/logger"
 	"os"
 
 	"github.com/casbin/casbin/v2"
@@ -13,8 +15,6 @@ import (
 	"github.com/spf13/cobra"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
-
 	"kubevulpes/cmd/app/config"
 	"kubevulpes/pkg/controller"
 	"kubevulpes/pkg/db"
@@ -57,6 +57,7 @@ func NewOptions() (*Options, error) {
 }
 
 func (o *Options) Complete() error {
+	// todo 获取配置文件参数
 	// 配置文件优先级: 默认配置，环境变量，命令行
 	if len(o.ConfigFile) == 0 {
 		// Try to read config file path from env.
@@ -66,7 +67,9 @@ func (o *Options) Complete() error {
 			o.ConfigFile = defaultConfigFile
 		}
 	}
-	// todo 读取配置文件
+	if err := o.parseConfig(o.ConfigFile, &o.ComponentConfig); err != nil {
+		log.Fatalf("Failed to parse config: %v", err)
+	}
 	if len(o.ComponentConfig.Default.JWTKey) == 0 {
 		o.ComponentConfig.Default.JWTKey = defaultTokenKey
 	}
@@ -88,14 +91,15 @@ func (o *Options) parseConfig(configFile string, conf *config.Config) error {
 		}
 		return err
 	}
-	if err := configContent.Unpack(&conf); err != nil {
+	// 使用此解析参数不能使用"(Mode   Mode `config:"mode"`)" 自定义类型作为 config值，否者会导致此处参数无法解析，直接终止程序运行
+	if err = configContent.Unpack(&conf); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// BindFlags binds the pixiu Configuration struct fields
+// BindFlags binds the kubevulpes Configuration struct fields
 func (o *Options) BindFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&o.ConfigFile, "configfile", "", "The location of the kubevulpes configuration file")
 }
@@ -131,6 +135,10 @@ func (o *Options) registerDatabase() error {
 	if err != nil {
 		return err
 	}
+
+	// 保存数据库对象
+	o.db = DB
+
 	// 设置数据库连接池
 	sqlDB, err := DB.DB()
 	if err != nil {
@@ -148,7 +156,7 @@ func (o *Options) registerDatabase() error {
 
 // This panics if o.db is nil.
 func (o *Options) registerEnforcer() error {
-	// Casbin
+	// Casbin 注册 casbin权限表 注意 o.db 是否是 nil
 	a, err := gormadapter.NewAdapterByDBUseTableName(o.db, "", rulesTableName)
 	if err != nil {
 		return err

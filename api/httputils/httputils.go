@@ -175,10 +175,6 @@ func getStatusFromContext(ctx context.Context) (*model.UserStatus, error) {
 	return us, nil
 }
 
-func SetUserNameToContext(c *gin.Context, user string) {
-	c.Set(userName, user)
-}
-
 func GetUserNameFromContext(ctx context.Context) (string, error) {
 	val := ctx.Value(userName)
 	if val == nil {
@@ -190,6 +186,10 @@ func GetUserNameFromContext(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("failed to assert user")
 	}
 	return user, nil
+}
+
+func SetUserNameToContext(c *gin.Context, user string) {
+	c.Set(userName, user)
 }
 
 func SetProjectToContext(c *gin.Context, pName, comp string) {

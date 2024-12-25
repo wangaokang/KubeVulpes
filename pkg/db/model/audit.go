@@ -32,6 +32,7 @@ type Audit struct {
 	Path       string               `gorm:"types:varchar(255)" json:"path"`                               // HTTP 路径
 	ObjectType ObjectType           `gorm:"column:resource_type;types:varchar(128)" json:"resource_type"` // 操作资源类型 [cluster/plan...]
 	Status     AuditOperationStatus `gorm:"types:tinyint" json:"status"`                                  // 记录操作运行结果[OperationStatus]
+	Event      string               `gorm:"types:text" json:"event"`                                      // 操作详情
 }
 
 func (a *Audit) TableName() string {

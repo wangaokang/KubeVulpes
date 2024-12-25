@@ -1,34 +1,23 @@
 package config
 
-type Mode string
-
-const (
-	DebugMode Mode = "debug"
-)
-
-func (m Mode) InDebug() bool {
-	return m == DebugMode
-}
-
 type Config struct {
-	Default DefaultOptions `yaml:"default"`
-	DB      DBOptions      `yaml:"db"`
-}
-
-type DefaultOptions struct {
-	Mode   Mode   `yaml:"mode"`
-	Listen int    `yaml:"listen"`
-	JWTKey string `yaml:"jwt_key"`
-
-	// 自动创建指定模型的数据库表结构，不会更新已存在的数据库表
-	AutoMigrate bool `yaml:"auto_migrate"`
+	DB      DBOptions      `config:"db"`
+	Default DefaultOptions `config:"default"`
 }
 
 type DBOptions struct {
-	Host     string `yaml:"host"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	Port     int    `yaml:"port"`
-	Name     string `yaml:"name"`
-	Driver   string `yaml:"driver"`
+	Name     string `config:"name"`
+	Host     string `config:"host"`
+	User     string `config:"user"`
+	Password string `config:"password"`
+	Port     int    `config:"port"`
+}
+
+type DefaultOptions struct {
+	Listen int    `config:"listen"`
+	Mode   string `config:"mode"` // 此处使用 unpack 渲染不能自定义变量
+	JWTKey string `config:"jwt_key"`
+
+	// 自动创建指定模型的数据库表结构，不会更新已存在的数据库表
+	AutoMigrate bool `config:"auto_migrate"`
 }
