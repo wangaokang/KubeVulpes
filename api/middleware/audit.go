@@ -1,8 +1,27 @@
+/*
+Copyright 2024 The Vuples Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package middleware
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"github.com/gin-contrib/requestid"
+	"k8s.io/klog/v2"
 	"net/http"
 	"strings"
 
@@ -61,23 +80,25 @@ func (w *auditWriter) asyncAudit(c *gin.Context) {
 		return
 	}
 
-	var status model.AuditOperationStatus = 0
-	if w.resp != nil && w.resp.IsSuccessful() {
-		status = 1
-	}
-
-	_ = &model.Audit{
-		Operator: user.Name,
+	audit := &model.Audit{
+		RequestId: requestid.Get(c),
+		Operator:  user.Name,
 		//Email:         user.Email,
 		Action: action,
-		//IP:            c.ClientIP(),
-		Status: status,
+		IP:     c.ClientIP(),
+		//Status: status,
+		Status: getAuditStatus(c),
 		//Content:       content,
 		//ResourceModel: resourceModel,
+		//Action:     c.Request.Method,
+		//Ip:         c.ClientIP(),
+		//Operator:   userName,
+		Path: c.Request.RequestURI,
+		//ObjectType: model.ObjectType(obj),
 	}
-	//if _, err := w.opts.Factory.Audit().Create(context.TODO(), audit); err != nil {
-	//	klog.Errorf("failed to create audit record [%s]: %v", audit.String(), err)
-	//}
+	if err = w.opts.Factory.Audit().Create(context.TODO(), audit); err != nil {
+		klog.Errorf("failed to create audit record [%s]: %v", audit.String(), err)
+	}
 }
 
 // 允许特定请求不经过验证
@@ -87,4 +108,24 @@ func allowRequest(c *gin.Context) bool {
 		return true
 	}
 	return false
+}
+
+// getAuditStatus returns the status of operation.
+func getAuditStatus(c *gin.Context) model.AuditOperationStatus {
+	respCode := httputils.GetResponseCode(c)
+	if respCode == 0 {
+		return model.AuditOpUnknown
+	}
+
+	if responseOK(respCode) {
+		return model.AuditOpSuccess
+	}
+
+	return model.AuditOpFail
+}
+
+func responseOK(code int) bool {
+	return code == http.StatusOK ||
+		code == http.StatusCreated ||
+		code == http.StatusAccepted
 }

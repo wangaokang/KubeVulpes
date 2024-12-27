@@ -1,10 +1,25 @@
+/*
+Copyright 2024 The Vuples Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package option
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"gorm.io/gorm/logger"
 	"os"
+	"time"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
@@ -15,6 +30,8 @@ import (
 	"github.com/spf13/cobra"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
 	"kubevulpes/cmd/app/config"
 	"kubevulpes/pkg/controller"
 	"kubevulpes/pkg/db"
@@ -24,8 +41,11 @@ import (
 const (
 	maxIdleConns      = 10
 	maxOpenConns      = 100
+	defaultListen     = 8080
 	defaultConfigFile = "/etc/kubevulpes/config.yaml"
 	defaultTokenKey   = "vuples"
+
+	defaultSlowSQLDuration = 1 * time.Second
 
 	rulesTableName = "rules"
 )
@@ -67,8 +87,14 @@ func (o *Options) Complete() error {
 			o.ConfigFile = defaultConfigFile
 		}
 	}
-	if err := o.parseConfig(o.ConfigFile, &o.ComponentConfig); err != nil {
-		log.Fatalf("Failed to parse config: %v", err)
+
+	// 解析配置文件
+	if err := o.Binding(o.ConfigFile, &o.ComponentConfig); err != nil {
+		return err
+	}
+
+	if o.ComponentConfig.Default.Listen == 0 {
+		o.ComponentConfig.Default.Listen = defaultListen
 	}
 	if len(o.ComponentConfig.Default.JWTKey) == 0 {
 		o.ComponentConfig.Default.JWTKey = defaultTokenKey
@@ -83,11 +109,11 @@ func (o *Options) Complete() error {
 	return nil
 }
 
-func (o *Options) parseConfig(configFile string, conf *config.Config) error {
+func (o *Options) Binding(configFile string, conf *config.Config) error {
 	configContent, err := yaml.NewConfigWithFile(configFile, ucfg.PathSep("."))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("config file not found!")
+			return fmt.Errorf("config file not found")
 		}
 		return err
 	}
@@ -114,6 +140,9 @@ func (o *Options) register() error {
 	if err := o.registerEnforcer(); err != nil {
 		return err
 	}
+	// 初始化数据库日志
+	o.ComponentConfig.Default.LogOptions.Init()
+
 	return nil
 }
 
@@ -126,28 +155,27 @@ func (o *Options) registerDatabase() error {
 		sqlConfig.Port,
 		sqlConfig.Name)
 
-	opt := &gorm.Config{}
-	if o.ComponentConfig.Default.Mode == "debug" {
-		opt.Logger = logger.Default.LogMode(logger.Info)
+	opt := &gorm.Config{
+		Logger: db.NewLogger(logger.Info, defaultSlowSQLDuration),
 	}
 
-	DB, err := gorm.Open(mysql.Open(dsn), opt)
+	dbCon, err := gorm.Open(mysql.Open(dsn), opt)
 	if err != nil {
 		return err
 	}
 
 	// 保存数据库对象
-	o.db = DB
+	o.db = dbCon
 
 	// 设置数据库连接池
-	sqlDB, err := DB.DB()
+	sqlDB, err := dbCon.DB()
 	if err != nil {
 		return err
 	}
 	sqlDB.SetMaxIdleConns(maxIdleConns)
 	sqlDB.SetMaxOpenConns(maxOpenConns)
 
-	o.Factory, err = db.NewDaoFactory(DB, o.ComponentConfig.Default.AutoMigrate)
+	o.Factory, err = db.NewDaoFactory(dbCon, o.ComponentConfig.Default.AutoMigrate)
 	if err != nil {
 		return err
 	}
@@ -156,7 +184,10 @@ func (o *Options) registerDatabase() error {
 
 // This panics if o.db is nil.
 func (o *Options) registerEnforcer() error {
-	// Casbin 注册 casbin权限表 注意 o.db 是否是 nil
+	// Casbin 注册 casbin 权限表 注意 o.db 是否是 nil
+	if !o.ComponentConfig.Default.AutoMigrate {
+		return nil
+	}
 	a, err := gormadapter.NewAdapterByDBUseTableName(o.db, "", rulesTableName)
 	if err != nil {
 		return err
@@ -171,8 +202,14 @@ func (o *Options) registerEnforcer() error {
 		return err
 	}
 
-	// Add an super admin policy.
+	// Add rbac policy.
 	_, err = o.Enforcer.AddPolicy(vulpesModel.AdminPolicy.Raw())
+	_, err = o.Enforcer.AddPolicy(vulpesModel.ReadOnlyPolicy.Raw())
+	_, err = o.Enforcer.AddPolicy(vulpesModel.ReadWritePolicy.Raw())
+	_, err = o.Enforcer.AddPolicy(vulpesModel.ReadWriteUpdatePolicy.Raw())
+
+	// Add CustomKeyMatch function
 	o.Enforcer.AddFunction("keyMatch2", vulpesModel.CustomKeyMatch)
+
 	return err
 }

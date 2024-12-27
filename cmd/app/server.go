@@ -1,7 +1,24 @@
+/*
+Copyright 2024 The Vuples Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,7 +26,6 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 
@@ -20,7 +36,7 @@ import (
 func NewServerCommand(version string) *cobra.Command {
 	opts, err := option.NewOptions()
 	if err != nil {
-		log.Fatalf("unable to initialize command options: %v", err)
+		klog.Fatalf("unable to initialize command options: %v", err)
 	}
 	cmd := &cobra.Command{
 		Use:  "kube-vulpes",
@@ -60,7 +76,7 @@ func NewServerCommand(version string) *cobra.Command {
 	return cmd
 }
 
-// 优雅启动服务
+// Run 优雅启动服务
 func Run(opt *option.Options) error {
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", opt.ComponentConfig.Default.Listen),
@@ -73,7 +89,7 @@ func Run(opt *option.Options) error {
 	// Initializing the server in a goroutine so that it won't block the graceful shutdown handling below
 	go func() {
 		klog.Info("starting license server")
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			klog.Fatal("failed to listen license server: ", err)
 		}
 	}()
@@ -82,14 +98,14 @@ func Run(opt *option.Options) error {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Info("shutting vuples server down ...")
+	klog.Info("shutting vulpes server down ...")
 
 	// The context is used to inform the server it has 5 seconds to finish the request
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("vuples server forced to shutdown: %v", err)
+		klog.Fatalf("vuples server forced to shutdown: %v", err)
 	}
 	return nil
 }

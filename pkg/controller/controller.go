@@ -1,3 +1,19 @@
+/*
+Copyright 2024 The Vuples Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package controller
 
 import (
@@ -7,14 +23,12 @@ import (
 
 	"kubevulpes/cmd/app/config"
 	"kubevulpes/pkg/controller/cluster"
-	"kubevulpes/pkg/controller/role"
 	"kubevulpes/pkg/controller/user"
 	"kubevulpes/pkg/db"
 )
 
 type VuplesInterface interface {
 	user.UserGetter
-	role.RoleGetter
 	cluster.ClusterGetter
 	auth.AuthGetter
 	audit.AuditGetter
@@ -27,7 +41,6 @@ type vuples struct {
 }
 
 func (p *vuples) User() user.Interface       { return user.NewUser(p.cc, p.factory, p.enforcer) }
-func (p *vuples) Role() role.Interface       { return role.NewRole(p.cc, p.factory, p.enforcer) }
 func (p *vuples) Cluster() cluster.Interface { return cluster.New(p.cc, p.factory, p.enforcer) }
 func (p *vuples) Auth() auth.Interface       { return auth.NewAuth(p.factory, p.enforcer) }
 func (p *vuples) Audit() audit.Interface     { return audit.NewAudit(p.cc, p.factory) }

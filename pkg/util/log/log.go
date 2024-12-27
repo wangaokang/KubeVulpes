@@ -1,40 +1,54 @@
+/*
+Copyright 2024 The Vuples Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package log
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/caoyingjunz/pixiu/pkg/db"
 	"sync"
 	"time"
 
-	klog "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+	"kubevulpes/pkg/db"
 )
 
 var once sync.Once
 
-type LogFormat string
-
 const (
-	LogFormatJson LogFormat = "json"
-	LogFormatText LogFormat = "text"
+	LogFormatJson = "json"
+	LogFormatText = "text"
 )
 
 var ErrInvalidLogFormat = errors.New("invalid log format")
 
-type LogLevel = klog.Level
+type LogLevel = log.Level
 
 // Providing 3 log levels now.
 const (
-	ErrorLevel LogLevel = klog.ErrorLevel
-	InfoLevel  LogLevel = klog.InfoLevel
-	DebugLevel LogLevel = klog.DebugLevel
+	ErrorLevel LogLevel = log.ErrorLevel
+	InfoLevel  LogLevel = log.InfoLevel
+	DebugLevel LogLevel = log.DebugLevel
 )
 
 type LogOptions struct {
-	LogFormat `yaml:"log_format"`
-	LogSQL    bool `yaml:"log_sql"`
-	LogLevel  `yaml:"log_level"`
+	LogFormat string `config:"log_format"`
+	LogSQL    bool   `config:"log_sql"`
+	LogLevel  `config:"log_level"`
 }
 
 // DefaultLogOptions returns the default configs.
@@ -58,14 +72,14 @@ func (o *LogOptions) Valid() error {
 // Init sets the log format only once.
 func (o *LogOptions) Init() {
 	once.Do(func() {
-		klog.SetLevel(o.LogLevel)
+		log.SetLevel(o.LogLevel)
 		switch o.LogFormat {
 		case LogFormatJson:
-			klog.SetFormatter(&klog.JSONFormatter{
+			log.SetFormatter(&log.JSONFormatter{
 				TimestampFormat: time.RFC3339Nano,
 			})
 		default:
-			klog.SetFormatter(&klog.TextFormatter{
+			log.SetFormatter(&log.TextFormatter{
 				FullTimestamp:   true,
 				TimestampFormat: time.RFC3339Nano,
 			})
@@ -82,14 +96,14 @@ const (
 type Logger struct {
 	startTime time.Time
 	logSQL    bool
-	logEntry  *klog.Entry
+	logEntry  *log.Entry
 }
 
 func NewLogger(cfg *LogOptions) *Logger {
 	return &Logger{
 		startTime: time.Now(),
 		logSQL:    cfg.LogSQL,
-		logEntry:  klog.NewEntry(klog.StandardLogger()),
+		logEntry:  log.NewEntry(log.StandardLogger()),
 	}
 }
 

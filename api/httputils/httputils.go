@@ -1,7 +1,24 @@
+/*
+Copyright 2024 The Vuples Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package httputils
 
 import (
 	"context"
+	goerrors "errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -63,6 +80,7 @@ func NewResponse() *Response {
 
 // SetSuccess 设置成功返回值
 func SetSuccess(c *gin.Context, r *Response) {
+	_ = contextBind(c).withResponseCode(http.StatusOK)
 	r.SetMessageWithCode("success", http.StatusOK)
 	c.JSON(http.StatusOK, r)
 }
@@ -81,23 +99,26 @@ func SetFailed(c *gin.Context, r *Response, err error) {
 
 // SetFailedWithCode 设置错误返回值
 func SetFailedWithCode(c *gin.Context, r *Response, code int, err error) {
+	_ = contextBind(c).withResponseCode(code).withRawError(err)
 	r.SetMessageWithCode(err, code)
 	c.JSON(http.StatusOK, r)
 }
 
 func SetFailedWithValidationError(c *gin.Context, r *Response, e string) {
+	_ = contextBind(c).withResponseCode(http.StatusBadRequest).withRawError(goerrors.New(e))
 	r.SetMessageWithCode(e, http.StatusBadRequest)
 	c.JSON(http.StatusOK, r)
 }
 
-func SetLicenseFileToContext(c *gin.Context, saltTS string) {
-	c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment;filename=.ctr"))
-	c.Writer.Write([]byte(saltTS))
-}
+//func SetLicenseFileToContext(c *gin.Context, saltTS string) {
+//	c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment;filename=.ctr"))
+//	c.Writer.Write([]byte(saltTS))
+//}
 
 // AbortFailedWithCode 设置错误，code 返回值并终止请求
 func AbortFailedWithCode(c *gin.Context, code int, err error) {
 	r := NewResponse()
+	_ = contextBind(c).withResponseCode(code).withRawError(err)
 	r.SetMessageWithCode(err, code)
 	c.JSON(http.StatusOK, r)
 	c.Abort()
@@ -192,10 +213,10 @@ func SetUserNameToContext(c *gin.Context, user string) {
 	c.Set(userName, user)
 }
 
-func SetProjectToContext(c *gin.Context, pName, comp string) {
-	c.Set(project, pName)
-	c.Set(company, comp)
-}
+//func SetProjectToContext(c *gin.Context, pName, comp string) {
+//	c.Set(project, pName)
+//	c.Set(company, comp)
+//}
 
 func GetProjectFromContext(ctx context.Context) (string, string, error) {
 	val := ctx.Value(project)
@@ -214,9 +235,9 @@ func GetProjectFromContext(ctx context.Context) (string, string, error) {
 	return projectName, com, nil
 }
 
-func SetSerialIdToContext(c *gin.Context, sid string) {
-	c.Set(serialId, sid)
-}
+//func SetSerialIdToContext(c *gin.Context, sid string) {
+//	c.Set(serialId, sid)
+//}
 
 func GetSerialIdFromContext(ctx context.Context) (string, error) {
 	val := ctx.Value(serialId)
@@ -365,5 +386,52 @@ func GetIdRangeFromListReq(ctx context.Context) (exists bool, ids []int64) {
 	}
 
 	ids, exists = val.([]int64)
+	return
+}
+
+const (
+	ResponseCodeKey = "response_code"
+	RawErrorKey     = "raw_error"
+)
+
+type ctxBind struct {
+	*gin.Context
+}
+
+func contextBind(c *gin.Context) *ctxBind {
+	return &ctxBind{c}
+}
+
+// withResponseCode puts the response code into the HTTP context.
+func (cb *ctxBind) withResponseCode(code int) *ctxBind {
+	cb.Set(ResponseCodeKey, code)
+	return cb
+}
+
+// withRawError puts the raw error into the HTTP context.
+func (cb *ctxBind) withRawError(err error) *ctxBind {
+	cb.Set(RawErrorKey, err)
+	return cb
+}
+
+// GetResponseCode gets the response code from the HTTP context.
+func GetResponseCode(ctx context.Context) (code int) {
+	val := ctx.Value(ResponseCodeKey)
+	if val == nil {
+		return
+	}
+
+	code = val.(int)
+	return
+}
+
+// GetRawError gets the raw error from the HTTP context.
+func GetRawError(ctx context.Context) (err error) {
+	val := ctx.Value(RawErrorKey)
+	if val == nil {
+		return
+	}
+
+	err = val.(error)
 	return
 }

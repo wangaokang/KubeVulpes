@@ -1,3 +1,19 @@
+/*
+Copyright 2024 The Vuples Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package model
 
 import (
@@ -11,8 +27,11 @@ import (
 )
 
 const (
-	AdminGroup = "root"
-	SidAll     = "*"
+	AdminGroup           = "root"
+	ReadOnlyGroup        = "readonly"
+	ReadWriteGroup       = "readwrite"
+	ReadWriteUpdateGroup = "readwriteupdate"
+	SidAll               = "*"
 )
 
 type Operation string
@@ -27,6 +46,27 @@ const (
 
 func (o Operation) String() string {
 	return string(o)
+}
+
+func buildOperation(ops ...Operation) Operation {
+	if len(ops) == 0 {
+		return ""
+	}
+
+	s := `\b(`
+	for i, op := range ops {
+		if op == "*" {
+			return "*"
+		}
+
+		s += op.String()
+		if i < len(ops)-1 {
+			s += "|"
+			continue
+		}
+		s += `)\b`
+	}
+	return Operation(s)
 }
 
 var OperationMap = map[Operation]struct{}{
@@ -167,7 +207,13 @@ func (p GroupBinding) GetGroupName() string {
 }
 
 // AdminPolicy is the specific policy for admin/root user.
-var AdminPolicy = NewGroupPolicy(AdminGroup, ObjectAll, SidAll, OpAll)
+// \b(read|write|update)\b
+var (
+	AdminPolicy           = NewGroupPolicy(AdminGroup, ObjectAll, SidAll, OpAll)
+	ReadOnlyPolicy        = NewGroupPolicy(ReadOnlyGroup, ObjectAll, SidAll, buildOperation(OpRead))
+	ReadWritePolicy       = NewGroupPolicy(ReadWriteGroup, ObjectAll, SidAll, buildOperation(OpRead, OpCreate))
+	ReadWriteUpdatePolicy = NewGroupPolicy(ReadWriteUpdateGroup, ObjectAll, SidAll, buildOperation(OpRead, OpCreate, OpUpdate))
+)
 
 // IsAdminPolicy returns true if the policy is the admin policy.
 func IsAdminPolicy(policy Policy) bool {
@@ -207,6 +253,7 @@ func GetIdRangeFromPolicy(policies []Policy) (all bool, ids []int64) {
 
 		raw := policy.Raw() // e.g. ["foo", "clusters", "*", "read"]
 		sid := raw[2]
+		// TODO: GetIdRangeFromPolicy 当前不准确
 		switch sid {
 		case "":
 			continue

@@ -1,3 +1,19 @@
+/*
+Copyright 2024 The Vuples Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package auth
 
 import (
@@ -6,7 +22,7 @@ import (
 	"net/http"
 
 	"github.com/casbin/casbin/v2"
-	klog "github.com/sirupsen/logrus"
+	"k8s.io/klog/v2"
 
 	"kubevulpes/api/errors"
 	ctrlutil "kubevulpes/pkg/controller/util"
@@ -74,7 +90,7 @@ func (a *auth) getBinding(ctx context.Context, req *types.GroupBindingRequest) (
 
 	policy, err := ctrlutil.GetGroupPolicy(a.enforcer, req.GroupName)
 	if err != nil {
-		klog.Errorf("failed to get group(%d): %v", req.GroupName, err)
+		klog.Errorf("failed to get group(%s): %v", req.GroupName, err)
 		return nil, errors.ErrServerInternal
 	}
 	if policy == nil {
@@ -252,7 +268,7 @@ func (a *auth) ListGroupBindings(ctx context.Context, req *types.ListGroupBindin
 
 	bindings, err := ctrlutil.GetGroupBindings(a.enforcer, conds...)
 	if err != nil {
-		klog.Errorf("failed to get group bindings: %v", *req.GroupName, err)
+		klog.Errorf("failed to get group(%s) bindings: %v", *req.GroupName, err)
 		return nil, errors.ErrServerInternal
 	}
 
