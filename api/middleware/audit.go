@@ -20,12 +20,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/gin-contrib/requestid"
 	"k8s.io/klog/v2"
 	"net/http"
 	"strings"
 
+	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
+
 	"kubevulpes/api/httputils"
 	option "kubevulpes/cmd/app/options"
 	"kubevulpes/pkg/db/model"
@@ -65,38 +66,31 @@ func Audit(o *option.Options) gin.HandlerFunc {
 // asyncAudit audits the request asynchronously.
 // It should be called in a goroutine.
 func (w *auditWriter) asyncAudit(c *gin.Context) {
-	if c.Request.Method == http.MethodGet && (allowRequest(c) ||
-		c.Writer.Status() != http.StatusUnauthorized) {
-		return
-	}
-	user, _ := httputils.GetUserFromRequest(c)
-	// request with invalid token,here cant get user,just return
-	if user == nil {
+	if c.Request.Method == http.MethodGet &&
+		c.Writer.Status() != http.StatusUnauthorized {
 		return
 	}
 
-	_, action, _, err := httputils.TranslateUrl(c)
-	if err != nil {
+	userName := "unknown"
+	if user, err := httputils.GetUserFromRequest(c); err == nil && user != nil {
+		userName = user.Name
+	}
+
+	obj, _, ok := httputils.GetObjectFromRequest(c)
+	if !ok {
 		return
 	}
 
 	audit := &model.Audit{
-		RequestId: requestid.Get(c),
-		Operator:  user.Name,
-		//Email:         user.Email,
-		Action: action,
-		IP:     c.ClientIP(),
-		//Status: status,
-		Status: getAuditStatus(c),
-		//Content:       content,
-		//ResourceModel: resourceModel,
-		//Action:     c.Request.Method,
-		//Ip:         c.ClientIP(),
-		//Operator:   userName,
-		Path: c.Request.RequestURI,
-		//ObjectType: model.ObjectType(obj),
+		RequestId:  requestid.Get(c),
+		Action:     c.Request.Method,
+		IP:         c.ClientIP(),
+		Operator:   userName,
+		Path:       c.Request.RequestURI,
+		ObjectType: model.ObjectType(obj),
+		Status:     getAuditStatus(c),
 	}
-	if err = w.opts.Factory.Audit().Create(context.TODO(), audit); err != nil {
+	if err := w.opts.Factory.Audit().Create(context.TODO(), audit); err != nil {
 		klog.Errorf("failed to create audit record [%s]: %v", audit.String(), err)
 	}
 }

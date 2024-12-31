@@ -1,5 +1,5 @@
 /*
-Copyright 2024 The Vuples Authors.
+Copyright 2025 The Vuples Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,22 +14,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package clientSet
+package jobmanager
 
 import (
-	"k8s.io/client-go/kubernetes"
+	"context"
 
-	"kubevulpes/pkg/client"
+	"kubevulpes/pkg/db"
+	logutil "kubevulpes/pkg/util/log"
 )
 
-// EMR测试连通性新建的clientSet
-func NewClientSet(data []byte) (*kubernetes.Clientset, error) {
-	kubeConfig, err := client.BuildClientConfig(data)
-	if err != nil {
-		return nil, err
+type JobContext struct {
+	context.Context
+	*logutil.Logger
+}
+
+func NewJobContext(name string, cfg *logutil.LogOptions) *JobContext {
+	jc := &JobContext{
+		Context: db.WithDBContext(context.Background()),
+		Logger:  logutil.NewLogger(cfg),
 	}
+	jc.WithLogField("job", name)
+	return jc
+}
 
-	c, err := kubernetes.NewForConfig(kubeConfig)
-
-	return c, nil
+func (c *JobContext) Log(level logutil.LogLevel, err error) {
+	c.Logger.Log(c.Context, level, err)
 }

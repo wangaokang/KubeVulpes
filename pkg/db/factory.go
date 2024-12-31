@@ -21,14 +21,16 @@ import "gorm.io/gorm"
 type ShareDaoFactory interface {
 	User() UserInterface
 	Audit() AuditInterface
+	Cluster() ClusterInterface
 }
 
 type shareDaoFactory struct {
 	db *gorm.DB
 }
 
-func (f *shareDaoFactory) User() UserInterface   { return newUser(f.db) }
-func (f *shareDaoFactory) Audit() AuditInterface { return newAudit(f.db) }
+func (f *shareDaoFactory) User() UserInterface       { return newUser(f.db) }
+func (f *shareDaoFactory) Audit() AuditInterface     { return newAudit(f.db) }
+func (f *shareDaoFactory) Cluster() ClusterInterface { return newCluster(f.db) }
 
 func NewDaoFactory(db *gorm.DB, migrate bool) (ShareDaoFactory, error) {
 	if migrate {

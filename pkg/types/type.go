@@ -30,23 +30,23 @@ import (
 	"kubevulpes/pkg/db/model"
 )
 
-type PixiuObjectMeta struct {
+type VulpesObjectMeta struct {
 	Cluster   string `uri:"cluster" binding:"required"`
 	Namespace string `uri:"namespace" binding:"required"`
 	Name      string `uri:"name"`
 }
 
-type PixiuMeta struct {
-	// pixiu 对象 ID
+type VulpesMeta struct {
+	// vuples 对象 ID
 	Id int64 `json:"id"`
-	// Pixiu 对象版本号
+	// vuples 对象版本号
 	ResourceVersion int64 `json:"resource_version"`
 }
 
 type TimeMeta struct {
-	// pixiu 对象创建时间
+	// vuples 对象创建时间
 	GmtCreate time.Time `json:"gmt_create"`
-	// pixiu 对象修改时间
+	// vuples 对象修改时间
 	GmtModified time.Time `json:"gmt_modified"`
 }
 
@@ -56,11 +56,11 @@ type KubeNode struct {
 }
 
 type Cluster struct {
-	PixiuMeta `json:",inline"`
+	VulpesMeta `json:",inline"`
 
-	Name      string `json:"name"`
-	AliasName string `json:"alias_name"`
-	//Status    model.ClusterStatus `json:"status"` // 0: 运行中 1: 部署中 2: 等待部署 3: 部署失败 4: 集群失联，API不可用
+	Name      string              `json:"name"`
+	AliasName string              `json:"alias_name"`
+	Status    model.ClusterStatus `json:"status"` //集群运行状态 0: 运行中 2: 集群失联 4: 集群 node 节点不健康
 
 	// 0: 标准集群 1: 自建集群
 	//ClusterType model.ClusterType `json:"cluster_type"`
@@ -102,7 +102,7 @@ type Resources struct {
 }
 
 type User struct {
-	PixiuMeta `json:",inline"`
+	VulpesMeta `json:",inline"`
 
 	Name        string           `json:"name"`                                 // 用户名称
 	Password    string           `json:"password" binding:"required,password"` // 用户密码
@@ -115,22 +115,14 @@ type User struct {
 }
 
 type Role struct {
-	PixiuMeta `json:",inline"`
+	VulpesMeta `json:",inline"`
 
 	Name string `json:"name"`
 }
 
-type Tenant struct {
-	PixiuMeta `json:",inline"`
-	TimeMeta  `json:",inline"`
-
-	Name        string `json:"name"`        // 用户名称
-	Description string `json:"description"` // 用户描述信息
-}
-
 type Audit struct {
-	PixiuMeta `json:",inline"`
-	TimeMeta  `json:",inline"`
+	VulpesMeta `json:",inline"`
+	TimeMeta   `json:",inline"`
 
 	Ip         string                     `json:"ip"`
 	Action     string                     `json:"action"`        // 操作动作

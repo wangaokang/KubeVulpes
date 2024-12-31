@@ -17,11 +17,11 @@ limitations under the License.
 package middleware
 
 import (
-	"github.com/caoyingjunz/pixiu/pkg/util"
 	"github.com/gin-contrib/requestid"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	option "kubevulpes/cmd/app/options"
+	"kubevulpes/pkg/util"
 )
 
 var alwaysAllowPath sets.String

@@ -18,7 +18,10 @@ package util
 
 import (
 	"fmt"
+	"time"
+
 	"golang.org/x/crypto/bcrypt"
+	"k8s.io/apimachinery/pkg/util/rand"
 )
 
 // 定义一个常量数组，存储单位
@@ -67,6 +70,11 @@ func formatSize(size int64, unitArray [6]string) string {
 // MultiSizeConvert 将两个字节大小的整数值转换为可读格式
 func MultiSizeConvert(size1, size2 int64) (string, string) {
 	return formatSize(size1, sizeUnitArray), formatSize(size2, sizeUnitArray)
+}
+
+// GenerateRequestID return a request ID string with random suffix.
+func GenerateRequestID() string {
+	return fmt.Sprintf("%s-%06d", time.Now().Format("20060102150405"), rand.Intn(1000000))
 }
 
 // DeduplicateIntSlice returns a new slice with duplicated elements removed.

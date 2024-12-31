@@ -55,6 +55,10 @@ var (
 		Code: http.StatusInternalServerError,
 		Err:  errors.ErrInternal,
 	}
+	ErrClusterNotFound = Error{
+		Code: http.StatusNotFound,
+		Err:  errors.ErrClusterNotFound,
+	}
 	ErrGroupBindingNotFound = Error{
 		Code: http.StatusNotFound,
 		Err:  errors.PolicyNotExistError,

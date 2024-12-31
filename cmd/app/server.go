@@ -88,9 +88,9 @@ func Run(opt *option.Options) error {
 
 	// Initializing the server in a goroutine so that it won't block the graceful shutdown handling below
 	go func() {
-		klog.Info("starting license server")
+		klog.Info("starting vuples server")
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			klog.Fatal("failed to listen license server: ", err)
+			klog.Fatal("failed to listen vuples server: ", err)
 		}
 	}()
 

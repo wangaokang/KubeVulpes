@@ -16,5 +16,50 @@ limitations under the License.
 
 package client
 
-type ClientInterface interface {
+import (
+	"encoding/base64"
+
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+)
+
+func ParseKubeConfigBytes(cfg string) ([]byte, error) {
+	kubeConfigBytes, err := base64.StdEncoding.DecodeString(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return kubeConfigBytes, err
+}
+
+func NewClientSetFromBytes(data []byte) (*kubernetes.Clientset, error) {
+	config, err := clientcmd.RESTConfigFromKubeConfig(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return kubernetes.NewForConfig(config)
+}
+
+func NewClientSetFromString(cfg string) (*kubernetes.Clientset, error) {
+	kubeConfigBytes, err := ParseKubeConfigBytes(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewClientSetFromBytes(kubeConfigBytes)
+}
+
+func NewClusterSet(cfg string) (*ClusterSet, error) {
+	kubeConfigBytes, err := ParseKubeConfigBytes(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	cs := &ClusterSet{}
+	if err = cs.Complete(kubeConfigBytes); err != nil {
+		return nil, err
+	}
+
+	return cs, nil
 }

@@ -20,16 +20,47 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"kubevulpes/api/httputils"
+	"kubevulpes/pkg/types"
 )
+
+type AuditMeta struct {
+	AuditId int64 `uri:"auditId" binding:"required"`
+}
 
 func (a *auditRouter) getAudit(c *gin.Context) {
 	r := httputils.NewResponse()
-	// todo
+
+	var (
+		opt AuditMeta
+		err error
+	)
+	if err = c.ShouldBindUri(&opt); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+	if r.Result, err = a.c.Audit().Get(c, opt.AuditId); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+
 	httputils.SetSuccess(c, r)
 }
 
 func (a *auditRouter) listAudit(c *gin.Context) {
 	r := httputils.NewResponse()
-	// todo
+
+	var (
+		listOption types.ListOptions // 分页设置
+		err        error
+	)
+	if err = httputils.ShouldBindAny(c, nil, nil, &listOption); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+	if r.Result, err = a.c.Audit().List(c, listOption); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+
 	httputils.SetSuccess(c, r)
 }

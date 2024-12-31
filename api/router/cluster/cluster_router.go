@@ -20,34 +20,112 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"kubevulpes/api/httputils"
+	"kubevulpes/pkg/types"
 )
+
+type IdMeta struct {
+	ClusterId int64 `uri:"clusterId" binding:"required"`
+}
 
 func (cr *clusterRouter) createCluster(c *gin.Context) {
 	r := httputils.NewResponse()
-	// todo
+	var (
+		req types.CreateClusterRequest
+		err error
+	)
+	if err = c.ShouldBindJSON(&req); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+	if err = cr.c.Cluster().Create(c, &req); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+
 	httputils.SetSuccess(c, r)
 }
 
 func (cr *clusterRouter) updateCluster(c *gin.Context) {
 	r := httputils.NewResponse()
-	// todo
+	var (
+		idMeta IdMeta
+		err    error
+	)
+
+	if err = c.ShouldBindUri(&idMeta); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+	var req types.UpdateClusterRequest
+	if err = c.ShouldBindJSON(&req); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+
+	if err = cr.c.Cluster().Update(c, idMeta.ClusterId, &req); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+
 	httputils.SetSuccess(c, r)
 }
 
 func (cr *clusterRouter) deleteCluster(c *gin.Context) {
 	r := httputils.NewResponse()
-	// todo
+
+	var (
+		idMeta IdMeta
+		err    error
+	)
+
+	if err = c.ShouldBindUri(&idMeta); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+
+	if err = cr.c.Cluster().Delete(c, idMeta.ClusterId); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+
 	httputils.SetSuccess(c, r)
 }
 
 func (cr *clusterRouter) getCluster(c *gin.Context) {
 	r := httputils.NewResponse()
-	// todo
+
+	var (
+		idMeta IdMeta
+		err    error
+	)
+
+	if err = c.ShouldBindUri(&idMeta); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+	if r.Result, err = cr.c.Cluster().Get(c, idMeta.ClusterId); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+
 	httputils.SetSuccess(c, r)
 }
 
 func (cr *clusterRouter) listCluster(c *gin.Context) {
 	r := httputils.NewResponse()
-	// todo
+
+	var (
+		err         error
+		listOptions types.ListOptions
+	)
+	if err = httputils.ShouldBindAny(c, nil, nil, &listOptions); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+	if r.Result, err = cr.c.Cluster().List(c, &listOptions); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+
 	httputils.SetSuccess(c, r)
 }

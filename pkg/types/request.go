@@ -24,6 +24,9 @@ type (
 		Name     string `json:"name" binding:"required"`     // required
 		Password string `json:"password" binding:"required"` // required
 	}
+	LogOutRequest struct {
+		UserId int64 `json:"user_id" binding:"required"`
+	}
 
 	// RBACPolicyRequest RBAC策略请求
 	RBACPolicyRequest struct {
@@ -69,9 +72,9 @@ type (
 
 	// CreateUserRequest 创建用户请求
 	CreateUserRequest struct {
-		Name        string           `json:"name" binding:"required"`              // required
-		Password    string           `json:"password" binding:"required,password"` // required
-		Role        model.UserRole   `json:"role" binding:"omitempty,oneof=0 1 2"` // optional
+		Name        string           `json:"name" binding:"required"`                // required
+		Password    string           `json:"password" binding:"required,password"`   // required
+		Role        model.UserRole   `json:"role" binding:"omitempty,oneof=0 2 4 6"` // optional
 		Status      model.UserStatus `json:"status" binding:"omitempty"`
 		Email       string           `json:"email" binding:"omitempty,email"` // optional
 		Description string           `json:"description" binding:"omitempty"` // optional
@@ -83,6 +86,13 @@ type (
 		Email           string           `json:"email" binding:"omitempty,email"`        // optional
 		Description     string           `json:"description" binding:"omitempty"`        // optional
 		ResourceVersion *int64           `json:"resource_version" binding:"required"`    // required
+	}
+
+	UpdateUserPasswordRequest struct {
+		New             string `json:"new" binding:"required,password"`     // required
+		Old             string `json:"old" binding:"required"`              // required
+		ResourceVersion *int64 `json:"resource_version" binding:"required"` // required
+		Reset           bool   `json:"reset"`
 	}
 
 	// CreateRoleRequest 创建角色请求

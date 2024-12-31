@@ -18,10 +18,10 @@ package controller
 
 import (
 	"github.com/casbin/casbin/v2"
-	"kubevulpes/pkg/controller/audit"
-	"kubevulpes/pkg/controller/auth"
 
 	"kubevulpes/cmd/app/config"
+	"kubevulpes/pkg/controller/audit"
+	"kubevulpes/pkg/controller/auth"
 	"kubevulpes/pkg/controller/cluster"
 	"kubevulpes/pkg/controller/user"
 	"kubevulpes/pkg/db"
@@ -41,7 +41,7 @@ type vuples struct {
 }
 
 func (p *vuples) User() user.Interface       { return user.NewUser(p.cc, p.factory, p.enforcer) }
-func (p *vuples) Cluster() cluster.Interface { return cluster.New(p.cc, p.factory, p.enforcer) }
+func (p *vuples) Cluster() cluster.Interface { return cluster.NewCluster(p.cc, p.factory, p.enforcer) }
 func (p *vuples) Auth() auth.Interface       { return auth.NewAuth(p.factory, p.enforcer) }
 func (p *vuples) Audit() audit.Interface     { return audit.NewAudit(p.cc, p.factory) }
 

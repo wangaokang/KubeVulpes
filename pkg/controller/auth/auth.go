@@ -28,7 +28,7 @@ import (
 	ctrlutil "kubevulpes/pkg/controller/util"
 	"kubevulpes/pkg/db"
 	"kubevulpes/pkg/db/model"
-	types "kubevulpes/pkg/types"
+	"kubevulpes/pkg/types"
 )
 
 type AuthGetter interface {

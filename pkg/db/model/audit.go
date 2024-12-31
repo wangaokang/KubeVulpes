@@ -18,6 +18,7 @@ package model
 
 import (
 	"fmt"
+
 	"kubevulpes/pkg/db/model/base"
 )
 

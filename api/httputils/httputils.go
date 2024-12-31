@@ -145,12 +145,7 @@ func ShouldBindAny(c *gin.Context, jsonObject interface{}, uriObject interface{}
 }
 
 const (
-	userKey  = "user"
-	userName = "userName"
-	project  = "project"
-	company  = "company"
-	serialId = "serialId"
-	status   = "status"
+	userKey = "user"
 )
 
 func GetUserFromRequest(ctx context.Context) (*model.User, error) {
@@ -177,88 +172,14 @@ func GetUserIdFromContext(ctx context.Context) (int64, error) {
 func SetUserToContext(c *gin.Context, user *model.User) {
 	c.Set(userKey, user)
 }
-
-func SetStatusToContext(c *gin.Context, us *model.UserStatus) {
-	c.Set(status, us)
-}
-
-func getStatusFromContext(ctx context.Context) (*model.UserStatus, error) {
-	val := ctx.Value(status)
-	if val == nil {
-		return nil, fmt.Errorf("get nil status")
-	}
-
-	us, ok := val.(*model.UserStatus)
-	if !ok {
-		return nil, fmt.Errorf("failed to assert status")
-	}
-
-	return us, nil
-}
-
-func GetUserNameFromContext(ctx context.Context) (string, error) {
-	val := ctx.Value(userName)
-	if val == nil {
-		return "", fmt.Errorf("get nil user")
-	}
-
-	user, ok := val.(string)
-	if !ok {
-		return "", fmt.Errorf("failed to assert user")
-	}
-	return user, nil
-}
-
-func SetUserNameToContext(c *gin.Context, user string) {
-	c.Set(userName, user)
-}
-
-//func SetProjectToContext(c *gin.Context, pName, comp string) {
-//	c.Set(project, pName)
-//	c.Set(company, comp)
-//}
-
-func GetProjectFromContext(ctx context.Context) (string, string, error) {
-	val := ctx.Value(project)
-	if val == nil {
-		return "", "", fmt.Errorf("get nil project")
-	}
-	projectName, ok := val.(string)
-	if !ok {
-		return "", "", fmt.Errorf("failed to assert project")
-	}
-	com, ok := val.(string)
-	if !ok {
-		return "", "", fmt.Errorf("failed to assert company")
-	}
-
-	return projectName, com, nil
-}
-
-//func SetSerialIdToContext(c *gin.Context, sid string) {
-//	c.Set(serialId, sid)
-//}
-
-func GetSerialIdFromContext(ctx context.Context) (string, error) {
-	val := ctx.Value(serialId)
-	if val == nil {
-		return "", fmt.Errorf("get nil serialId")
-	}
-	serial, ok := val.(string)
-	if !ok {
-		return "", fmt.Errorf("failed to assert serialId")
-	}
-	return serial, nil
-}
-
 func GetObjectFromRequest(c *gin.Context) (string, string, bool) {
 	return getObjectFromRequest(c.Request.URL.Path)
 }
 
 // getObjectFromRequest cuts and returns the object from the request path.
-// e.g. /license/clusters/1 -> "clusters" "1" true
+// e.g. /api/vuples/clusters/1 -> "clusters" "1" true
 
-// todo 后续优化
+// todo 需要重写
 func getObjectFromRequest(path string) (obj, sid string, ok bool) {
 	// must start with /
 	l := len(path)
@@ -271,104 +192,13 @@ func getObjectFromRequest(path string) (obj, sid string, ok bool) {
 		return subs[0], "", true
 	}
 	if l == 2 {
-		// e.g. /license/clusters -> "clusters" "" true
+		// e.g. /vuples/clusters -> "clusters" "" true
 		if subs[1] != "users" && subs[1] != "projects" && subs[1] != "audits" {
 			return subs[0], subs[1], true
 		}
 		return subs[1], "", true
 	}
 	return subs[1], subs[2], true
-}
-
-// TranslateUrl todo 翻译 url 后续优化
-func TranslateUrl(c *gin.Context) (model, action, content string, err error) {
-	object, _, ok := getObjectFromRequest(c.Request.URL.Path)
-	if !ok {
-		return "", "", "", errors.ErrInvalidRequest
-	}
-
-	switch object {
-	case "license":
-		model = "license管理"
-		serial, err := GetSerialIdFromContext(c)
-		if err != nil {
-			return "", "", "", err
-		}
-		content = fmt.Sprintf("证书序列号: %s", serial)
-		switch c.Request.Method {
-		case http.MethodPost:
-			action = "新增授权证书"
-		case http.MethodDelete:
-			action = "删除证书"
-		case http.MethodGet:
-			if strings.HasSuffix(c.Request.URL.Path, "download") {
-				action = "下载授权证书"
-			}
-		}
-	case "users":
-		model = "用户管理"
-		email, err := GetUserNameFromContext(c)
-		content = fmt.Sprintf("账号: %s", email)
-		if err != nil {
-			return "", "", "", err
-		}
-		switch c.Request.Method {
-		case http.MethodPost:
-			action = "创建账号"
-			if strings.HasSuffix(c.Request.URL.Path, "password") {
-				action = "重置密码"
-			}
-		case http.MethodPut:
-			action = "编辑账号"
-			if strings.HasSuffix(c.Request.URL.Path, "permissions") {
-				if usersOperateMap(c) {
-					action = "启用账号"
-				} else {
-					action = "禁用账号"
-				}
-			}
-		case http.MethodDelete:
-			action = "删除账号"
-		case http.MethodGet:
-
-		}
-		if strings.HasSuffix(c.Request.URL.Path, "login") {
-			model = "平台登录"
-			action = "进入license管理平台"
-		}
-	case "projects":
-		model = "license管理"
-		projectName, comp, err := GetProjectFromContext(c)
-		if err != nil {
-			return "", "", "", err
-		}
-		content = fmt.Sprintf("企业: %s, 项目: %s", projectName, comp)
-		switch c.Request.Method {
-		case http.MethodPost:
-			action = "新增项目"
-		case http.MethodPut:
-			action = "编辑项目"
-		case http.MethodDelete:
-			action = "删除项目"
-		}
-	default:
-		return "", "", "", fmt.Errorf("unknown module")
-	}
-	return
-}
-
-func usersOperateMap(c *gin.Context) bool {
-	if strings.HasSuffix(c.Request.URL.Path, "permissions") {
-		s, err := getStatusFromContext(c)
-		if err != nil {
-			return false
-		}
-		if *s == model.UserStatusDisabled {
-			return false
-		}
-
-	}
-	return true
 }
 
 const (

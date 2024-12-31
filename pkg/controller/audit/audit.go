@@ -18,8 +18,10 @@ package audit
 
 import (
 	"context"
+
 	"github.com/casbin/casbin/v2"
 	"k8s.io/klog/v2"
+
 	"kubevulpes/api/errors"
 	"kubevulpes/cmd/app/config"
 	"kubevulpes/pkg/db"
@@ -78,7 +80,7 @@ func (a *audit) List(ctx context.Context, listOption types.ListOptions) (interfa
 
 func (a *audit) model2Type(o *model.Audit) *types.Audit {
 	return &types.Audit{
-		PixiuMeta: types.PixiuMeta{
+		VulpesMeta: types.VulpesMeta{
 			Id:              o.Id,
 			ResourceVersion: o.ResourceVersion,
 		},

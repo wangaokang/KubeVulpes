@@ -81,3 +81,63 @@ func (u *userRouter) updateUser(c *gin.Context) {
 	// todo
 	httputils.SetSuccess(c, r)
 }
+
+func (u *userRouter) updatePassword(c *gin.Context) {
+	r := httputils.NewResponse()
+
+	var (
+		idMeta IdMeta
+		req    types.UpdateUserPasswordRequest
+		err    error
+	)
+	if err = httputils.ShouldBindAny(c, &req, &idMeta, nil); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+	if err = u.c.User().UpdatePassword(c, idMeta.UserId, &req); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+
+	httputils.SetSuccess(c, r)
+}
+
+func (u *userRouter) login(c *gin.Context) {
+	r := httputils.NewResponse()
+
+	var (
+		req types.LoginRequest
+		err error
+	)
+	if err = c.ShouldBindJSON(&req); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+	loginResp, err := u.c.User().Login(c, &req)
+	if err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+	r.Result = loginResp
+	httputils.SetUserToContext(c, loginResp.User)
+
+	httputils.SetSuccess(c, r)
+}
+
+func (u *userRouter) logout(c *gin.Context) {
+	r := httputils.NewResponse()
+	var (
+		req types.LogOutRequest
+		err error
+	)
+	if err = httputils.ShouldBindAny(c, nil, &req, nil); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+	if err = u.c.User().Logout(c, req.UserId); err != nil {
+		httputils.SetFailed(c, r, err)
+		return
+	}
+
+	httputils.SetSuccess(c, r)
+}
