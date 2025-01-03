@@ -36,6 +36,9 @@ func InstallMiddlewares(o *option.Options) {
 			return util.GenerateRequestID()
 		})),
 		Cors(),
+		Logger(&o.ComponentConfig.Default.LogOptions),
+		UserRateLimiter(),
+		Limiter(),
 		Authentication(o),
 		Authorization(o),
 		Audit(o))

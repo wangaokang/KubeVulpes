@@ -33,7 +33,7 @@ func NewRouter(o *option.Options) {
 }
 
 func (r *clusterRouter) initRouter(httpEngine *gin.Engine) {
-	clusterRoute := httpEngine.Group("/api/v1/clusters")
+	clusterRoute := httpEngine.Group("/api/vulpes/clusters")
 	{
 		clusterRoute.POST("", r.createCluster)
 		clusterRoute.GET("", r.listCluster)

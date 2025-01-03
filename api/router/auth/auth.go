@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	AuthBashPath   = "/api/v1/auth"
+	AuthBashPath   = "/api/vulpes/auth"
 	PolicySubPath  = "/policy"
 	BindingSubPath = "/binding"
 )

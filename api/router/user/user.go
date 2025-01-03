@@ -33,7 +33,7 @@ func NewRouter(o *option.Options) {
 }
 
 func (u *userRouter) initRouter(httpEngine *gin.Engine) {
-	userRoute := httpEngine.Group("/api/v1/users")
+	userRoute := httpEngine.Group("/api/vulpes/users")
 	{
 		userRoute.POST("", u.createUser)
 		userRoute.GET("", u.listUser)

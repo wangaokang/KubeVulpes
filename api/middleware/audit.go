@@ -17,9 +17,7 @@ limitations under the License.
 package middleware
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"k8s.io/klog/v2"
 	"net/http"
 	"strings"
@@ -34,28 +32,23 @@ import (
 
 // 自定义 ResponseWriter 用于捕获写入的数据
 type auditWriter struct {
-	gin.ResponseWriter
-	resp *httputils.Response
 	opts *option.Options
 }
 
-func newResponseWriter(w gin.ResponseWriter, o *option.Options) *auditWriter {
+func newResponseWriter(o *option.Options) *auditWriter {
 	return &auditWriter{
-		ResponseWriter: w,
-		resp:           httputils.NewResponse(),
-		opts:           o,
+		opts: o,
 	}
 }
 
-func (w *auditWriter) Write(b []byte) (int, error) {
-	_ = json.NewDecoder(bytes.NewReader(b)).Decode(w.resp)
-	return w.ResponseWriter.Write(b)
-}
+//func (w *auditWriter) Write(b []byte) (int, error) {
+//	_ = json.NewDecoder(bytes.NewReader(b)).Decode(w.resp)
+//	return w.ResponseWriter.Write(b)
+//}
 
 func Audit(o *option.Options) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		auditor := newResponseWriter(c.Writer, o)
-		c.Writer = auditor
+		auditor := newResponseWriter(o)
 		c.Next()
 
 		// do audit asynchronously

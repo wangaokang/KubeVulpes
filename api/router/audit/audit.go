@@ -33,7 +33,7 @@ func NewRouter(o *option.Options) {
 }
 
 func (r *auditRouter) initRouter(httpEngine *gin.Engine) {
-	auditRoute := httpEngine.Group("/api/v1/audits")
+	auditRoute := httpEngine.Group("/api/vulpes/audits")
 	{
 		auditRoute.GET("", r.listAudit)
 		auditRoute.GET("/:auditId", r.getAudit)

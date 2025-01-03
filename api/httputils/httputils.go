@@ -172,6 +172,7 @@ func GetUserIdFromContext(ctx context.Context) (int64, error) {
 func SetUserToContext(c *gin.Context, user *model.User) {
 	c.Set(userKey, user)
 }
+
 func GetObjectFromRequest(c *gin.Context) (string, string, bool) {
 	return getObjectFromRequest(c.Request.URL.Path)
 }
@@ -179,7 +180,6 @@ func GetObjectFromRequest(c *gin.Context) (string, string, bool) {
 // getObjectFromRequest cuts and returns the object from the request path.
 // e.g. /api/vuples/clusters/1 -> "clusters" "1" true
 
-// todo 需要重写
 func getObjectFromRequest(path string) (obj, sid string, ok bool) {
 	// must start with /
 	l := len(path)
@@ -188,17 +188,14 @@ func getObjectFromRequest(path string) (obj, sid string, ok bool) {
 	}
 	subs := strings.Split(path[1:l], "/")
 	l = len(subs)
-	if l < 2 || subs[0] != "license" {
-		return subs[0], "", true
+	if l < 3 || subs[1] != "vuples" {
+		return
 	}
-	if l == 2 {
-		// e.g. /vuples/clusters -> "clusters" "" true
-		if subs[1] != "users" && subs[1] != "projects" && subs[1] != "audits" {
-			return subs[0], subs[1], true
-		}
-		return subs[1], "", true
+	if l == 3 {
+		// e.g. /api/vuples/clusters -> "clusters" "" true
+		return subs[2], "", subs[2] != ""
 	}
-	return subs[1], subs[2], true
+	return subs[2], subs[3], subs[2] != "" && subs[3] != ""
 }
 
 const (
