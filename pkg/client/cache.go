@@ -28,7 +28,7 @@ import (
 	v1 "k8s.io/client-go/listers/core/v1"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	resourceclient "k8s.io/metrics/pkg/client/clientset/versioned/typed/metrics/v1beta1"
+	metricsv1beta1 "k8s.io/metrics/pkg/client/clientset/versioned/typed/metrics/v1beta1"
 )
 
 var (
@@ -81,7 +81,7 @@ func (p *VuplesInformer) JobsLister() batchv1.JobLister { return p.Shared.Batch(
 type ClusterSet struct {
 	Client   *kubernetes.Clientset
 	Config   *restclient.Config
-	Metric   *resourceclient.MetricsV1beta1Client
+	Metric   *metricsv1beta1.MetricsV1beta1Client
 	Informer *VuplesInformer
 }
 
@@ -93,7 +93,7 @@ func (cs *ClusterSet) Complete(cfg []byte) error {
 	if cs.Client, err = kubernetes.NewForConfig(cs.Config); err != nil {
 		return err
 	}
-	if cs.Metric, err = resourceclient.NewForConfig(cs.Config); err != nil {
+	if cs.Metric, err = metricsv1beta1.NewForConfig(cs.Config); err != nil {
 		return err
 	}
 

@@ -7,7 +7,7 @@ db.name: kubevuples
 
 #default
 default.mode: debug
-default.auto_migrate: true
+default.auto_migrate: false
 default.listen: 8099
 # 配置 unit数字
 default.log_level: 4

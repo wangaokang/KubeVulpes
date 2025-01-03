@@ -3,7 +3,6 @@ module kubevulpes
 go 1.20
 
 require (
-	github.com/caoyingjunz/pixiu v0.0.0-20240708141109-9dc20512b901
 	github.com/casbin/casbin/v2 v2.100.0
 	github.com/casbin/gorm-adapter/v3 v3.32.0
 	github.com/elastic/go-ucfg v0.8.8
@@ -24,13 +23,13 @@ require (
 	gorm.io/gorm v1.25.12
 	k8s.io/api v0.26.3
 	k8s.io/apimachinery v0.26.3
-	k8s.io/client-go v0.22.1
+	k8s.io/client-go v0.23.0
 	k8s.io/klog/v2 v2.80.1
 )
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
+	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/casbin/govaluate v1.2.0 // indirect
@@ -82,7 +81,7 @@ require (
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/oauth2 v0.1.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
+	golang.org/x/sync v0.7.0
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/term v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
@@ -96,7 +95,8 @@ require (
 	gorm.io/driver/sqlserver v1.5.3 // indirect
 	gorm.io/plugin/dbresolver v1.5.3 // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
-	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d // indirect
+	k8s.io/metrics v0.23.0
+	k8s.io/utils v0.0.0-20241210054802-24370beab758 // indirect
 	modernc.org/libc v1.22.2 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.5.0 // indirect
