@@ -1,0 +1,14 @@
+#databases
+db.host: 172.16.114.4
+db.port: 3306
+db.user: root
+db.password: DT#passw0rd2019
+db.name: kubevuples
+
+#default
+default.mode: debug
+default.auto_migrate: false
+default.listen: 8099
+# 配置 unit数字
+default.log_level: 4
+default.log_format: json

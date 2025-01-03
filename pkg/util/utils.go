@@ -1,8 +1,27 @@
-package utils
+/*
+Copyright 2024 The Vuples Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package util
 
 import (
 	"fmt"
+	"time"
+
 	"golang.org/x/crypto/bcrypt"
+	"k8s.io/apimachinery/pkg/util/rand"
 )
 
 // 定义一个常量数组，存储单位
@@ -51,4 +70,32 @@ func formatSize(size int64, unitArray [6]string) string {
 // MultiSizeConvert 将两个字节大小的整数值转换为可读格式
 func MultiSizeConvert(size1, size2 int64) (string, string) {
 	return formatSize(size1, sizeUnitArray), formatSize(size2, sizeUnitArray)
+}
+
+// GenerateRequestID return a request ID string with random suffix.
+func GenerateRequestID() string {
+	return fmt.Sprintf("%s-%06d", time.Now().Format("20060102150405"), rand.Intn(1000000))
+}
+
+// DeduplicateIntSlice returns a new slice with duplicated elements removed.
+func DeduplicateIntSlice(s []int64) (ret []int64) {
+	ret = make([]int64, 0)
+	m := make(map[int64]struct{})
+	for _, v := range s {
+		if _, ok := m[v]; ok {
+			continue
+		}
+		m[v] = struct{}{}
+		ret = append(ret, v)
+	}
+
+	return
+}
+
+// Less returns the smxaller one.
+func Less(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
