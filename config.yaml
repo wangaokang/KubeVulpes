@@ -1,8 +1,8 @@
 #databases
-db.host: 172.16.114.4
+db.host: kubevuples
 db.port: 3306
 db.user: root
-db.password: DT#passw0rd2019
+db.password: kubevuples1234
 db.name: kubevuples
 
 #default
