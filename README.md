@@ -1,1 +1,2 @@
-次项目为一个B端系统的后端架构demo
+# mcp-server
+此仓库用于存放个人开发mcp-server
